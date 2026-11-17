@@ -55,7 +55,7 @@ export function ScrollSequence({
       zoom: target.zoom,
     };
 
-    const bitmaps: (ImageBitmap | HTMLImageElement | null)[] = new Array(frameCount).fill(null);
+    const bitmaps: (HTMLImageElement | null)[] = new Array(frameCount).fill(null);
     let dirty = true;
     let rafId = 0;
 
@@ -74,7 +74,7 @@ export function ScrollSequence({
 
     const draw = () => {
       const source = pickLoaded(Math.round(current.frame));
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       const cw = canvas.clientWidth;
       const ch = canvas.clientHeight;
       if (canvas.width !== Math.round(cw * dpr) || canvas.height !== Math.round(ch * dpr)) {
@@ -87,10 +87,9 @@ export function ScrollSequence({
       ctx2d.fillRect(0, 0, cw, ch);
       if (!source) return;
 
-      const iw = "width" in source ? source.width : (source as HTMLImageElement).naturalWidth;
-      const ih = "height" in source ? source.height : (source as HTMLImageElement).naturalHeight;
+      const iw = source.naturalWidth;
+      const ih = source.naturalHeight;
 
-      // Encaixe limpo mantendo o óculos 100% visível entre o texto superior e os botões inferiores
       const maxH = ch * 0.62;
       const maxW = cw * 0.92;
       const scale = Math.min(maxW / iw, maxH / ih) * current.zoom;
@@ -109,8 +108,8 @@ export function ScrollSequence({
       const dz = target.zoom - current.zoom;
 
       if (Math.abs(df) > 0.008 || Math.abs(dz) > 0.0005) {
-        current.frame += df * 0.22;
-        current.zoom += dz * 0.18;
+        current.frame += df * 0.14;
+        current.zoom += dz * 0.14;
         dirty = true;
       }
 
@@ -123,38 +122,38 @@ export function ScrollSequence({
 
     rafId = requestAnimationFrame(tick);
 
+    // Carregamento progressivo em lotes de 8 imagens para nunca travar a CPU do celular
     let cancelled = false;
-    const loadFrame = async (i: number) => {
-      try {
-        const res = await fetch(frameSrc(i));
-        const blob = await res.blob();
-        if (cancelled) return;
-        if (typeof createImageBitmap === "function") {
-          const bmp = await createImageBitmap(blob);
-          if (cancelled) {
-            bmp.close();
-            return;
+
+    const loadBatch = (startIdx: number) => {
+      if (cancelled || startIdx >= frameCount) return;
+      const batchSize = 8;
+      let completed = 0;
+      const count = Math.min(batchSize, frameCount - startIdx);
+
+      for (let i = startIdx; i < startIdx + count; i++) {
+        const img = new Image();
+        img.decoding = "async";
+        img.src = frameSrc(i);
+        const onDone = () => {
+          if (cancelled) return;
+          if (img.naturalWidth > 0) {
+            bitmaps[i] = img;
+            if (i === 0 || Math.abs(i - Math.round(current.frame)) <= 2) {
+              dirty = true;
+            }
           }
-          bitmaps[i] = bmp;
-        } else {
-          const img = new Image();
-          img.src = URL.createObjectURL(blob);
-          await img.decode();
-          bitmaps[i] = img;
-        }
-        if (i === 0 || Math.abs(i - Math.round(current.frame)) <= 2) {
-          dirty = true;
-        }
-      } catch {
-        // Ignore network abort
+          completed++;
+          if (completed === count) {
+            setTimeout(() => loadBatch(startIdx + batchSize), 16);
+          }
+        };
+        img.onload = onDone;
+        img.onerror = onDone;
       }
     };
 
-    loadFrame(0).then(() => {
-      for (let i = 1; i < frameCount; i++) {
-        loadFrame(i);
-      }
-    });
+    loadBatch(0);
 
     const onResize = () => {
       dirty = true;
@@ -198,16 +197,13 @@ export function ScrollSequence({
       cancelAnimationFrame(rafId);
       window.removeEventListener("resize", onResize);
       gctx.revert();
-      bitmaps.forEach((b) => {
-        if (b && "close" in b && typeof b.close === "function") b.close();
-      });
     };
   }, [folder, frameCount, backdrop]);
 
   return (
     <section
       ref={sectionRef}
-      className="relative h-[180svh] md:h-[210svh] motion-reduce:h-svh bg-white"
+      className="relative h-[240svh] md:h-[220svh] motion-reduce:h-svh bg-white"
     >
       <div className="sticky top-0 h-svh overflow-hidden bg-white">
         <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true" />

@@ -217,7 +217,7 @@ select {
 .animate-infinite-carousel {
   display: flex;
   width: max-content;
-  animation: infiniteCarousel 42s linear infinite;
+  animation: infiniteCarousel 68s linear infinite;
   will-change: transform;
 }
 .animate-infinite-carousel:hover {

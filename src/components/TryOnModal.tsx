@@ -1,13 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Camera, ChevronDown, ChevronUp, Loader2, Minus, Plus, X } from "lucide-react";
+import { Camera, Loader2, X } from "lucide-react";
 import type { CatalogData, TryOnErrorCode, TryOnManifest, TryOnState } from "@/types/catalog";
 import { getVariantById, isTryOnApproved } from "@/lib/catalog";
 import { getProductMedia } from "@/lib/product-media";
 import { PrototypeTryOnAdapter } from "@/lib/tryon-adapter";
 import { trackEvent } from "@/lib/telemetry";
 import { EyewearSvg } from "./EyewearSvg";
+import { ArFaceTryOnCanvas } from "./ArFaceTryOnCanvas";
 
 interface TryOnModalProps {
   isOpen: boolean;
@@ -21,7 +22,7 @@ interface TryOnModalProps {
 const ERRORS: Record<TryOnErrorCode, { title: string; body: string }> = {
   CAMERA_DENIED: {
     title: "A câmera não foi liberada.",
-    body: "Autorize a câmera nas configurações do navegador ou veja o modelo na Anna.",
+    body: "Autorize o acesso à câmera nas configurações do navegador para provar o óculos em 3D no seu rosto.",
   },
   CAMERA_UNAVAILABLE: {
     title: "Nenhuma câmera encontrada.",
@@ -33,7 +34,7 @@ const ERRORS: Record<TryOnErrorCode, { title: string; body: string }> = {
   },
   ASSET_UNAVAILABLE: {
     title: "Este modelo ainda não está no provador.",
-    body: "Escolha outro modelo ao lado.",
+    body: "Escolha outro modelo abaixo.",
   },
   LICENSE_ERROR: {
     title: "O provador está indisponível agora.",
@@ -41,7 +42,7 @@ const ERRORS: Record<TryOnErrorCode, { title: string; body: string }> = {
   },
   TRACKING_LOST: {
     title: "Não encontramos seu rosto.",
-    body: "Centralize o rosto e evite movimentos rápidos.",
+    body: "Centralize o rosto na câmera.",
   },
   LOAD_TIMEOUT: {
     title: "A conexão está lenta.",
@@ -49,7 +50,7 @@ const ERRORS: Record<TryOnErrorCode, { title: string; body: string }> = {
   },
 };
 
-type StageMode = "intro" | "camera" | "anna";
+type StageMode = "intro" | "camera";
 
 export function TryOnModal({
   isOpen,
@@ -63,8 +64,6 @@ export function TryOnModal({
   const [mode, setMode] = useState<StageMode>("intro");
   const [errorCode, setErrorCode] = useState<TryOnErrorCode | null>(null);
   const [variantId, setVariantId] = useState(initialVariantId);
-  const [offsetY, setOffsetY] = useState(0);
-  const [scale, setScale] = useState(1);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -93,15 +92,12 @@ export function TryOnModal({
     if (videoRef.current) videoRef.current.srcObject = null;
   }, []);
 
-  // Abertura / fechamento
   useEffect(() => {
     if (isOpen && !wasOpenRef.current) {
       wasOpenRef.current = true;
       setVariantId(initialVariantId);
       setMode("intro");
       setErrorCode(null);
-      setOffsetY(0);
-      setScale(1);
       setState("explanation");
       trackEvent("tryon_open", { variantId: initialVariantId });
       requestAnimationFrame(() => closeBtnRef.current?.focus());
@@ -112,7 +108,6 @@ export function TryOnModal({
     }
   }, [isOpen, initialVariantId, stopCamera]);
 
-  // Trava o scroll da página por trás
   useEffect(() => {
     if (!isOpen) return;
     const prev = document.body.style.overflow;
@@ -122,7 +117,6 @@ export function TryOnModal({
     };
   }, [isOpen]);
 
-  // Libera a câmera ao trocar de aba
   useEffect(() => {
     if (!isOpen) return;
     const onVis = () => {
@@ -137,7 +131,6 @@ export function TryOnModal({
 
   useEffect(() => () => stopCamera(), [stopCamera]);
 
-  // Liga o stream ao <video>
   useEffect(() => {
     if (mode === "camera" && state === "trying_on" && videoRef.current && streamRef.current) {
       if (videoRef.current.srcObject !== streamRef.current) {
@@ -180,13 +173,6 @@ export function TryOnModal({
     trackEvent("tryon_ready", { variantId, sku: selection?.variant.sku });
   };
 
-  const showOnAnna = () => {
-    stopCamera();
-    setErrorCode(null);
-    setMode("anna");
-    setState("trying_on");
-  };
-
   const selectVariant = async (nextId: string) => {
     if (nextId === variantId) return;
     const res = await adapterRef.current!.selectVariant(nextId);
@@ -202,10 +188,11 @@ export function TryOnModal({
   const { product, variant } = selection;
   const media = getProductMedia(product.id);
   const isCameraLive = mode === "camera" && state === "trying_on";
+  const glbUrl = variant.glbUrl || product.glbUrl || "/models/oculos-01-imperial-leao.glb";
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-stretch justify-center bg-black/40 backdrop-blur-sm md:items-center md:p-8"
+      className="fixed inset-0 z-50 flex items-stretch justify-center bg-black/50 backdrop-blur-sm md:items-center md:p-8"
       role="dialog"
       aria-modal="true"
       aria-label={`Provar ${media.shortName}`}
@@ -224,23 +211,20 @@ export function TryOnModal({
           <X className="h-4 w-4" strokeWidth={2} />
         </button>
 
-        {/* ================= PALCO ================= */}
+        {/* ================= PALCO PRINCIPAL (CÂMERA + RA 3D) ================= */}
         <div className={`relative min-h-0 flex-1 overflow-hidden ${isCameraLive ? "bg-black" : "bg-[#f5f5f7]"}`}>
-          {/* Introdução */}
+          {/* Introdução limpa: Apenas 1 botão "Usar câmera" */}
           {mode === "intro" && (
-            <div className="flex h-full flex-col items-center justify-center px-8 text-center">
-              <EyewearSvg variant={variant} className="h-auto w-full max-w-[360px]" />
-              <h2 className="t-headline mt-10 text-[#1d1d1f]">Veja em você.</h2>
-              <p className="mt-3 max-w-[380px] text-[17px] text-[#6e6e73]">
-                Usamos só a câmera, nunca o microfone. Nada é gravado ou enviado.
+            <div className="flex h-full flex-col items-center justify-center px-6 text-center">
+              <EyewearSvg variant={variant} className="h-auto w-full max-w-[300px] sm:max-w-[360px]" />
+              <h2 className="t-headline mt-8 text-[#1d1d1f]">Veja em você.</h2>
+              <p className="mt-2.5 max-w-[360px] text-[15px] sm:text-[17px] text-[#6e6e73]">
+                O óculos em 3D acompanha os movimentos do seu rosto em tempo real.
               </p>
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+              <div className="mt-7">
                 <button type="button" onClick={startCamera} className="btn btn-primary">
                   <Camera className="h-[18px] w-[18px]" strokeWidth={1.75} />
-                  Usar câmera
-                </button>
-                <button type="button" onClick={showOnAnna} className="btn btn-secondary">
-                  Ver na Anna
+                  <span>Usar câmera</span>
                 </button>
               </div>
             </div>
@@ -250,68 +234,27 @@ export function TryOnModal({
           {mode === "camera" && state === "requesting_camera" && (
             <div className="flex h-full flex-col items-center justify-center gap-3 text-[#6e6e73]">
               <Loader2 className="h-6 w-6 animate-spin" strokeWidth={1.75} />
-              <p className="text-[15px]">Aguardando a câmera…</p>
+              <p className="text-[15px]">Abrindo câmera e rastreamento 3D…</p>
             </div>
           )}
 
-          {/* Câmera ao vivo */}
+          {/* Câmera ao vivo + Motor 3D MediaPipe Face Landmarker */}
           {isCameraLive && (
             <>
-              <video ref={videoRef} autoPlay playsInline muted className="h-full w-full -scale-x-100 object-cover" />
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                <div
-                  className="w-[58%] max-w-[380px] drop-shadow-[0_10px_18px_rgba(0,0,0,0.35)] transition-transform duration-150"
-                  style={{ transform: `translateY(calc(-9% + ${offsetY}px)) scale(${scale})` }}
-                >
-                  <EyewearSvg variant={variant} className="h-auto w-full" />
-                </div>
-              </div>
-
-              <div className="absolute inset-x-0 bottom-5 flex justify-center">
-                <div className="flex items-center gap-1 rounded-full bg-white/85 p-1 backdrop-blur-md">
-                  {[
-                    { label: "Subir", icon: ChevronUp, on: () => setOffsetY((y) => y - 6) },
-                    { label: "Descer", icon: ChevronDown, on: () => setOffsetY((y) => y + 6) },
-                    { label: "Diminuir", icon: Minus, on: () => setScale((s) => Math.max(0.7, +(s - 0.05).toFixed(2))) },
-                    { label: "Aumentar", icon: Plus, on: () => setScale((s) => Math.min(1.4, +(s + 0.05).toFixed(2))) },
-                  ].map(({ label, icon: Icon, on }) => (
-                    <button
-                      key={label}
-                      type="button"
-                      onClick={on}
-                      aria-label={label}
-                      className="flex h-11 w-11 items-center justify-center rounded-full text-[#1d1d1f] transition-colors hover:bg-black/5"
-                    >
-                      <Icon className="h-[18px] w-[18px]" strokeWidth={2} />
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="h-full w-full -scale-x-100 object-cover"
+              />
+              <ArFaceTryOnCanvas
+                videoRef={videoRef}
+                glbUrl={glbUrl}
+                frontTextureUrl={media.front}
+                frameStyle={variant.frameStyle}
+              />
             </>
-          )}
-
-          {/* Na Anna */}
-          {mode === "anna" && (
-            <div className="flex h-full items-center justify-center">
-              {media.annaPhoto ? (
-                <img
-                  src={media.annaPhoto}
-                  alt={`Anna usando o ${media.shortName}`}
-                  className="h-full w-full object-cover object-[50%_30%]"
-                />
-              ) : (
-                <div className="px-8 text-center">
-                  <EyewearSvg variant={variant} className="mx-auto h-auto w-full max-w-[420px]" />
-                  <p className="mt-8 text-[17px] text-[#6e6e73]">
-                    Ainda não temos foto da Anna com o {media.shortName}.
-                  </p>
-                  <button type="button" onClick={startCamera} className="btn btn-primary mt-6">
-                    <Camera className="h-[18px] w-[18px]" strokeWidth={1.75} />
-                    Provar com a câmera
-                  </button>
-                </div>
-              )}
-            </div>
           )}
 
           {/* Câmera pausada ao sair da aba */}
@@ -319,7 +262,7 @@ export function TryOnModal({
             <div className="flex h-full flex-col items-center justify-center px-8 text-center">
               <p className="t-subhead text-[#1d1d1f]">A câmera foi pausada.</p>
               <button type="button" onClick={startCamera} className="btn btn-primary mt-6">
-                Retomar
+                Retomar câmera
               </button>
             </div>
           )}
@@ -328,21 +271,18 @@ export function TryOnModal({
           {state === "error" && errorCode && (
             <div className="flex h-full flex-col items-center justify-center px-8 text-center">
               <p className="t-subhead text-[#1d1d1f]">{ERRORS[errorCode].title}</p>
-              <p className="mt-3 max-w-[380px] text-[17px] text-[#6e6e73]">{ERRORS[errorCode].body}</p>
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+              <p className="mt-3 max-w-[380px] text-[15px] sm:text-[17px] text-[#6e6e73]">{ERRORS[errorCode].body}</p>
+              <div className="mt-7">
                 <button type="button" onClick={startCamera} className="btn btn-primary">
-                  Tentar de novo
-                </button>
-                <button type="button" onClick={showOnAnna} className="btn btn-secondary">
-                  Ver na Anna
+                  Tentar novamente
                 </button>
               </div>
             </div>
           )}
         </div>
 
-        {/* ================= LATERAL / BOTTOM SHEET ================= */}
-        <aside className="flex max-h-[44svh] shrink-0 flex-col gap-4 overflow-y-auto border-t border-[#d2d2d7] bg-white p-5 sm:p-6 md:max-h-none md:w-[340px] md:gap-6 md:border-l md:border-t-0 md:p-8">
+        {/* ================= LATERAL / BOTTOM SHEET (APENAS MODELOS + COMPRAR) ================= */}
+        <aside className="flex shrink-0 flex-col gap-4 border-t border-[#d2d2d7] bg-white p-5 sm:p-6 md:w-[340px] md:gap-6 md:border-l md:border-t-0 md:p-8">
           <div className="md:pt-8">
             <h3 className="text-[22px] sm:text-[28px] font-semibold leading-tight tracking-[0.007em] text-[#1d1d1f]">
               {media.shortName}
@@ -375,23 +315,17 @@ export function TryOnModal({
             </div>
           </div>
 
-          <div className="mt-auto flex flex-col gap-2.5 sm:gap-3">
-            <div className="flex gap-2.5 md:flex-col">
-              <a
-                href={variant.purchaseUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => trackEvent("purchase_click", { variantId: variant.id, sku: variant.sku, source: "tryon" })}
-                className="btn btn-primary flex-1 md:w-full"
-              >
-                Comprar
-              </a>
-              {mode !== "camera" && (
-                <button type="button" onClick={startCamera} className="btn btn-secondary flex-1 md:w-full">
-                  Usar câmera
-                </button>
-              )}
-            </div>
+          {/* Apenas o botão Comprar (Zero repetição de "Usar câmera" aqui embaixo) */}
+          <div className="mt-auto pt-1">
+            <a
+              href={variant.purchaseUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackEvent("purchase_click", { variantId: variant.id, sku: variant.sku, source: "tryon" })}
+              className="btn btn-primary w-full"
+            >
+              Comprar
+            </a>
           </div>
         </aside>
       </div>
