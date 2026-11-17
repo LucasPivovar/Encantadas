@@ -221,7 +221,7 @@ export function EncantadasExperience({ catalog, manifest }: EncantadasExperience
         }`}
       >
         <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-[#6e6e73]">
-          Coleção Assinada por Anna
+          Coleção por Anna
         </p>
         <h2 className="mt-3 text-[22px] sm:text-[26px] font-medium uppercase tracking-[0.38em] text-[#1d1d1f]">
           Encantadas
@@ -526,7 +526,7 @@ export function EncantadasExperience({ catalog, manifest }: EncantadasExperience
              ============================================================ */}
           <footer className="border-t border-[#d2d2d7] bg-[#f5f5f7] px-6 py-8 text-[12px] text-[#6e6e73]">
             <div className="mx-auto flex max-w-[1160px] flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <span>Encantadas · Coleção Assinada por Anna</span>
+              <span>Encantadas · Coleção de Anna</span>
               <span>© 2026 Encantadas. Todos os direitos reservados.</span>
             </div>
           </footer>
