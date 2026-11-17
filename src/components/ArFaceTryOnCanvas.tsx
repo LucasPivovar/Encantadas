@@ -318,7 +318,7 @@ export function ArFaceTryOnCanvas({
       alpha: true,
       powerPreference: "high-performance",
     });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.35;
@@ -564,12 +564,12 @@ export function ArFaceTryOnCanvas({
             const rotMat = new THREE.Matrix4().makeBasis(xAxis, yAxis, zAxis);
             targetPose.quat.setFromRotationMatrix(rotMat);
 
-            if (consecutiveHits >= 2) {
+            if (consecutiveHits >= 1) {
               if (!hasFirstLock) {
                 hasFirstLock = true;
                 currentPose.pos.copy(targetPose.pos);
                 currentPose.quat.copy(targetPose.quat);
-                currentPose.scale = targetPose.scale * 0.9;
+                currentPose.scale = targetPose.scale;
               }
               faceAnchor.visible = true;
               setFaceLocked(true);
@@ -589,9 +589,16 @@ export function ArFaceTryOnCanvas({
       }
 
       if (faceAnchor.visible) {
-        currentPose.pos.lerp(targetPose.pos, 0.45);
-        currentPose.quat.slerp(targetPose.quat, 0.4);
-        currentPose.scale += (targetPose.scale - currentPose.scale) * 0.38;
+        // Suavização adaptativa por velocidade: resposta quase instantânea ao mexer o rosto, estável quando parado
+        const posDelta = currentPose.pos.distanceTo(targetPose.pos);
+        const rotDelta = currentPose.quat.angleTo(targetPose.quat);
+        const posAlpha = posDelta > 0.002 ? 0.90 : 0.60;
+        const rotAlpha = rotDelta > 0.015 ? 0.88 : 0.58;
+        const scaleAlpha = Math.abs(targetPose.scale - currentPose.scale) > 0.015 ? 0.85 : 0.55;
+
+        currentPose.pos.lerp(targetPose.pos, posAlpha);
+        currentPose.quat.slerp(targetPose.quat, rotAlpha);
+        currentPose.scale += (targetPose.scale - currentPose.scale) * scaleAlpha;
 
         faceAnchor.position.copy(currentPose.pos);
         faceAnchor.quaternion.copy(currentPose.quat);
