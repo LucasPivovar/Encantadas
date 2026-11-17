@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# reference 3D head (local calibration only, 46MB)
+/blender/reference_head/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

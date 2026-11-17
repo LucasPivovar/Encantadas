@@ -186,8 +186,7 @@ export function ArFaceTryOnCanvas({
   const loadAndStyleEyewear = (
     holder: THREE.Group,
     url: string,
-    style: string,
-    reflTex: THREE.CanvasTexture
+    style: string
   ) => {
     const loader = new GLTFLoader();
     const tintTex = createOpticalLensTintTexture(style);
@@ -196,7 +195,6 @@ export function ArFaceTryOnCanvas({
 
     loader.load(url, (gltf) => {
       const root = gltf.scene;
-      const reflectionClones: THREE.Mesh[] = [];
 
       root.traverse((child) => {
         if ((child as THREE.Mesh).isMesh) {
@@ -205,60 +203,51 @@ export function ArFaceTryOnCanvas({
           ensureMeshUVs(mesh.geometry);
 
           if (mName.includes("Lens")) {
-            // 1. Corpo de Cristal Degradê da Lente (vê os olhos atrás + reflete luz)
+            // Vidro óptico físico translúcido com reflexo natural do ambiente (sem manchas brancas artificiais)
             mesh.renderOrder = 3;
+            const lensOpacity =
+              style === "rimless"
+                ? 0.64
+                : style === "navigator"
+                ? 0.72
+                : style === "bold"
+                ? 0.82
+                : 0.78;
             mesh.material = new THREE.MeshPhysicalMaterial({
               map: tintTex,
               color: new THREE.Color(0xffffff),
               transparent: true,
-              opacity: 0.92,
-              roughness: 0.02,
-              metalness: 0.05,
-              ior: 1.53,
-              reflectivity: 1.0,
+              opacity: lensOpacity,
+              roughness: 0.04,
+              metalness: 0.02,
+              ior: 1.52,
+              reflectivity: 0.9,
               clearcoat: 1.0,
-              clearcoatRoughness: 0.01,
-              envMapIntensity: 2.6,
+              clearcoatRoughness: 0.03,
+              envMapIntensity: 1.45,
               depthWrite: false,
               side: THREE.DoubleSide,
             });
-
-            // 2. Camada de Reflexo de Vidro Dinâmico que desliza conforme a pessoa mexe o rosto
-            const reflMesh = new THREE.Mesh(
-              mesh.geometry,
-              new THREE.MeshBasicMaterial({
-                map: reflTex,
-                transparent: true,
-                opacity: 0.85,
-                blending: THREE.AdditiveBlending,
-                depthWrite: false,
-                side: THREE.FrontSide,
-              })
-            );
-            reflMesh.position.copy(mesh.position);
-            reflMesh.position.z += 0.0004;
-            reflMesh.rotation.copy(mesh.rotation);
-            reflMesh.scale.copy(mesh.scale);
-            reflMesh.renderOrder = 4;
-            reflectionClones.push(reflMesh);
           } else if (
             mName.includes("Gold") ||
             mName.includes("Lion") ||
             mName.includes("PantherBody") ||
             mName.includes("TempleMetal") ||
-            mName.includes("Bridge") ||
+            mName.includes("RimlessBridge_Gold") ||
+            mName.includes("LowerBridge_Gold") ||
+            mName.includes("TopBrowBar_Gold") ||
             mName.includes("Rivet") ||
             mName.includes("NoseArm") ||
             mName.includes("NosePadCore")
           ) {
             mesh.renderOrder = 2;
             mesh.material = new THREE.MeshPhysicalMaterial({
-              color: new THREE.Color(0.95, 0.79, 0.42),
+              color: new THREE.Color(0.92, 0.76, 0.39),
               metalness: 1.0,
-              roughness: 0.13,
-              clearcoat: 0.6,
-              clearcoatRoughness: 0.06,
-              envMapIntensity: 2.4,
+              roughness: 0.16,
+              clearcoat: 0.5,
+              clearcoatRoughness: 0.08,
+              envMapIntensity: 2.0,
             });
           } else if (mName.includes("NosePad_")) {
             mesh.renderOrder = 2;
@@ -298,7 +287,6 @@ export function ArFaceTryOnCanvas({
         }
       });
 
-      reflectionClones.forEach((rc) => root.add(rc));
       holder.clear();
       holder.add(root);
     });
@@ -306,13 +294,8 @@ export function ArFaceTryOnCanvas({
 
   // Quando o usuário troca de modelo na barra inferior, atualiza o GLB e o vidro imediatamente
   useEffect(() => {
-    if (!glbHolderRef.current || !reflectionTexRef.current) return;
-    loadAndStyleEyewear(
-      glbHolderRef.current,
-      glbUrl,
-      frameStyle,
-      reflectionTexRef.current
-    );
+    if (!glbHolderRef.current) return;
+    loadAndStyleEyewear(glbHolderRef.current, glbUrl, frameStyle);
   }, [glbUrl, frameStyle]);
 
   // Inicializa Cena Three.js + MediaPipe Face Landmarker Local (v1.2.3)
@@ -358,12 +341,12 @@ export function ArFaceTryOnCanvas({
     faceAnchor.visible = false;
     scene.add(faceAnchor);
 
-    // 1. Oclusor Craniano Invisível (esconde a haste atrás da orelha ao virar o rosto)
+    // 1. Oclusor Craniano Invisível (calibrado com cabeça.glb: 64.9mm meia-largura)
     const headOccluder = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.065, 0.061, 0.2, 24),
+      new THREE.CylinderGeometry(0.064, 0.060, 0.21, 24),
       new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: true })
     );
-    headOccluder.position.set(0, 0.0, -0.082);
+    headOccluder.position.set(0, -0.01, -0.078);
     headOccluder.renderOrder = 0;
     faceAnchor.add(headOccluder);
 
@@ -374,40 +357,35 @@ export function ArFaceTryOnCanvas({
     const sCtx = shadowCanvas.getContext("2d");
     if (sCtx) {
       const grad = sCtx.createRadialGradient(64, 32, 4, 64, 32, 56);
-      grad.addColorStop(0, "rgba(0,0,0,0.22)");
+      grad.addColorStop(0, "rgba(0,0,0,0.16)");
       grad.addColorStop(1, "rgba(0,0,0,0)");
       sCtx.fillStyle = grad;
       sCtx.fillRect(0, 0, 128, 64);
     }
     const shadowTex = new THREE.CanvasTexture(shadowCanvas);
     const shadowMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.138, 0.048),
+      new THREE.PlaneGeometry(0.134, 0.044),
       new THREE.MeshBasicMaterial({
         map: shadowTex,
         transparent: true,
         depthWrite: false,
       })
     );
-    shadowMesh.position.set(0, -0.006, -0.003);
+    shadowMesh.position.set(0, -0.004, 0.008);
     shadowMesh.renderOrder = 1;
     faceAnchor.add(shadowMesh);
 
     // 3. Holder do Modelo 3D (.GLB):
-    // Como a âncora agora é o centro exato da linha dos olhos (midEyes),
-    // Y=0 do GLB já é o centro das lentes!
+    // Calibrado pela cabeça humana realista: ponte nasal fica ~15mm à frente do plano dos olhos
     const glbHolder = new THREE.Group();
-    glbHolder.position.set(0, -0.001, 0.002);
+    glbHolder.position.set(0, -0.002, 0.015);
     faceAnchor.add(glbHolder);
     glbHolderRef.current = glbHolder;
-
-    const reflTex = createDynamicGlassReflectionTexture();
-    reflectionTexRef.current = reflTex;
 
     loadAndStyleEyewear(
       glbHolder,
       activeSpecRef.current.glbUrl,
-      activeSpecRef.current.frameStyle,
-      reflTex
+      activeSpecRef.current.frameStyle
     );
 
     const targetPose = {
@@ -536,7 +514,8 @@ export function ArFaceTryOnCanvas({
             const pLeftInner = toWorld(landmarks[133]);
             const pRightInner = toWorld(landmarks[362]);
             const pRightOuter = toWorld(landmarks[263]);
-            const pNasion = toWorld(landmarks[168]);
+            const pForehead = toWorld(landmarks[10]);
+            const pChin = toWorld(landmarks[152]);
             const pTempleL = toWorld(landmarks[234]);
             const pTempleR = toWorld(landmarks[454]);
 
@@ -553,33 +532,33 @@ export function ArFaceTryOnCanvas({
             // Escala precisa baseada na largura facial (têmpora a têmpora e canto a canto dos olhos)
             const templeSpan = pTempleL.distanceTo(pTempleR);
             const eyeOuterSpan = pLeftOuter.distanceTo(pRightOuter);
-            const targetFaceWidth = Math.max(templeSpan * 1.04, eyeOuterSpan * 1.46);
-            // Largura de charneira a charneira no GLB = 0.136m
+            const targetFaceWidth = Math.max(templeSpan * 1.03, eyeOuterSpan * 1.44);
+            // Largura de charneira a charneira no GLB calibrado = 0.134m
             targetPose.scale = Math.max(
               0.45,
-              Math.min(2.6, targetFaceWidth / 0.136)
+              Math.min(2.6, targetFaceWidth / 0.134)
             );
 
-            // Eixo X (Horizontal / Roll + Yaw): da têmpora/olho esquerdo para o direito
+            // Base ortonormal correta no vídeo espelhado (mx = 1 - x):
+            // #33 (pLeftOuter) fica à direita (+X) na tela espelhada e #263 (pRightOuter) à esquerda (-X)
             const xAxis = new THREE.Vector3()
-              .subVectors(pRightOuter, pLeftOuter)
+              .subVectors(pLeftOuter, pRightOuter)
+              .normalize();
+            if (xAxis.x < 0) xAxis.negate();
+
+            // Eixo vertical anatômico da testa (#10) ao queixo (#152) -> sempre +Y
+            const rawUp = new THREE.Vector3()
+              .subVectors(pForehead, pChin)
               .normalize();
 
-            // Eixo Z (Frente / Pitch + Yaw): do ponto médio das têmporas (#234, #454) para a ponte nasal (#168)
-            // Isso segue exatamente a inclinação real das hastes do óculos do nariz até as orelhas!
-            const midTemples = new THREE.Vector3()
-              .addVectors(pTempleL, pTempleR)
-              .multiplyScalar(0.5);
-            const rawForward = new THREE.Vector3()
-              .subVectors(pNasion, midTemples)
-              .normalize();
-
-            // Ortonormalização de Gram-Schmidt garantindo que o óculos nunca distorça
-            const yAxis = new THREE.Vector3()
-              .crossVectors(rawForward, xAxis)
-              .normalize();
+            // Z apontando para fora do rosto em direção à câmera (+Z = X × Y)
             const zAxis = new THREE.Vector3()
-              .crossVectors(xAxis, yAxis)
+              .crossVectors(xAxis, rawUp)
+              .normalize();
+
+            // Ortonormalização final de Gram-Schmidt garantindo Y = Z × X
+            const yAxis = new THREE.Vector3()
+              .crossVectors(zAxis, xAxis)
               .normalize();
 
             const rotMat = new THREE.Matrix4().makeBasis(xAxis, yAxis, zAxis);
@@ -617,11 +596,6 @@ export function ArFaceTryOnCanvas({
         faceAnchor.position.copy(currentPose.pos);
         faceAnchor.quaternion.copy(currentPose.quat);
         faceAnchor.scale.setScalar(currentPose.scale);
-
-        // Desliza o reflexo branco do vidro conforme o ângulo da cabeça (efeito cristal real!)
-        eulerHelper.setFromQuaternion(currentPose.quat, "YXZ");
-        reflTex.offset.x = THREE.MathUtils.clamp(eulerHelper.y * 0.65, -0.35, 0.35);
-        reflTex.offset.y = THREE.MathUtils.clamp(-eulerHelper.x * 0.55, -0.3, 0.3);
       }
 
       renderer.render(scene, camera);
@@ -646,7 +620,6 @@ export function ArFaceTryOnCanvas({
       if (faceLandmarker && typeof faceLandmarker.close === "function") {
         faceLandmarker.close();
       }
-      reflTex.dispose();
       shadowTex.dispose();
       pmrem.dispose();
       renderer.dispose();
