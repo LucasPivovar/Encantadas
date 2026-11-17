@@ -97,8 +97,10 @@ export function ScrollSequence({
       const iw = source.naturalWidth;
       const ih = source.naturalHeight;
 
-      const maxH = ch * 0.62;
-      const maxW = cw * 0.92;
+      // Óculos maior e imponente na tela (especialmente no mobile)
+      const isMobile = cw < 768;
+      const maxH = ch * (isMobile ? 0.72 : 0.74);
+      const maxW = cw * (isMobile ? 1.08 : 0.96);
       const scale = Math.min(maxW / iw, maxH / ih) * current.zoom;
       const dw = iw * scale;
       const dh = ih * scale;
@@ -114,9 +116,9 @@ export function ScrollSequence({
       const df = target.frame - current.frame;
       const dz = target.zoom - current.zoom;
 
-      if (Math.abs(df) > 0.005 || Math.abs(dz) > 0.0004) {
-        current.frame += df * 0.12;
-        current.zoom += dz * 0.12;
+      if (Math.abs(df) > 0.004 || Math.abs(dz) > 0.0004) {
+        current.frame += df * 0.09;
+        current.zoom += dz * 0.09;
         dirty = true;
       }
 
@@ -169,16 +171,16 @@ export function ScrollSequence({
           trigger: section,
           start: "top top",
           end: "bottom bottom",
-          scrub: 0.5,
+          scrub: 0.9,
         },
       });
 
       tl.to(target, { frame: frameCount - 1, duration: 1 }, 0)
-        .to(q('[data-seq="intro"]'), { autoAlpha: 0, y: -18, duration: 0.1, ease: "power2.in" }, 0.26)
-        .to(q('[data-seq="feature"]'), { autoAlpha: 1, y: 0, duration: 0.1, ease: "power2.out" }, 0.36)
-        .to(q('[data-seq="feature"]'), { autoAlpha: 0, y: -18, duration: 0.1, ease: "power2.in" }, 0.64)
-        .to(target, { zoom: 0.9, duration: 0.14, ease: "power2.inOut" }, 0.66)
-        .to(q('[data-seq="finale"]'), { autoAlpha: 1, y: 0, duration: 0.12, ease: "power2.out" }, 0.74);
+        .to(q('[data-seq="intro"]'), { autoAlpha: 0, y: -18, duration: 0.09, ease: "power2.in" }, 0.25)
+        .to(q('[data-seq="feature"]'), { autoAlpha: 1, y: 0, duration: 0.09, ease: "power2.out" }, 0.35)
+        .to(q('[data-seq="feature"]'), { autoAlpha: 0, y: -18, duration: 0.09, ease: "power2.in" }, 0.65)
+        .to(target, { zoom: 0.92, duration: 0.14, ease: "power2.inOut" }, 0.67)
+        .to(q('[data-seq="finale"]'), { autoAlpha: 1, y: 0, duration: 0.1, ease: "power2.out" }, 0.75);
     }, section);
 
     return () => {
@@ -192,7 +194,7 @@ export function ScrollSequence({
   return (
     <section
       ref={sectionRef}
-      className="relative h-[360svh] md:h-[280svh] motion-reduce:h-svh bg-white"
+      className="relative h-[620svh] md:h-[440svh] motion-reduce:h-svh bg-white"
     >
       <div className="sticky top-0 h-svh overflow-hidden bg-white">
         <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true" />
