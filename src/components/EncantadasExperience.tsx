@@ -251,7 +251,7 @@ export function EncantadasExperience({ catalog, manifest }: EncantadasExperience
               <img
                 src="/images/ar/anna-hero-clean.jpg"
                 alt="Anna usando o óculos Pantera da coleção Encantadas"
-                className="h-full w-full object-cover object-[50%_22%] md:object-[58%_30%]"
+                className="h-full w-full object-cover object-[50%_22%] md:object-[right_30%]"
                 fetchPriority="high"
               />
             </picture>
@@ -263,7 +263,7 @@ export function EncantadasExperience({ catalog, manifest }: EncantadasExperience
           />
 
           <div className="pointer-events-none absolute inset-0 flex items-end md:items-center">
-            <div className="mx-auto w-full max-w-[1280px] px-5 pb-8 sm:px-6 sm:pb-12 md:px-10 md:pb-0">
+            <div className="w-full px-5 pb-8 sm:px-8 sm:pb-12 md:pl-12 lg:pl-20 xl:pl-24 md:pr-10 md:pb-0">
               <div data-hero-copy className="pointer-events-auto max-w-[440px]">
                 <p className="text-[11px] sm:text-[12px] font-medium uppercase tracking-[0.22em] sm:tracking-[0.26em] text-[#1d1d1f]/80">
                   Lançamento Exclusivo · Por Anna
