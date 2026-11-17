@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { getPreloadedSequence } from "@/lib/asset-preloader";
 
 interface ScrollSequenceProps {
   folder: string;
@@ -20,11 +21,10 @@ interface ScrollSequenceProps {
 }
 
 /**
- * Vídeo 100% Width em Fundo Branco Puro (#FFFFFF):
- * - Zero borrões ou gradientes laterais artificiais.
- * - O ciclorama dos quadros foi calibrado para #FFFFFF puro, fundindo-se
- *   de forma invisível com a página.
- * - O óculos permanece centralizado e inteiro na tela (nunca sobe para trás do header).
+ * Vídeo Scrubbing Sem Flicks e Lento/Cinematográfico no Celular:
+ * - Usa diretamente os quadros já pré-decodificados na memória pelo Preloader.
+ * - Altura de 360svh no mobile (3.6x a tela) para a pessoa rolar vários toques
+ *   apreciando cada grau de rotação do óculos e cada texto com calma.
  */
 export function ScrollSequence({
   folder,
@@ -55,7 +55,12 @@ export function ScrollSequence({
       zoom: target.zoom,
     };
 
-    const bitmaps: (HTMLImageElement | null)[] = new Array(frameCount).fill(null);
+    // Usa o array já decodificado pelo preloader; fallback caso acesso direto
+    const preloaded = getPreloadedSequence(folder);
+    const images: (HTMLImageElement | null)[] = preloaded
+      ? [...preloaded]
+      : new Array(frameCount).fill(null);
+
     let dirty = true;
     let rafId = 0;
 
@@ -64,10 +69,12 @@ export function ScrollSequence({
     const pickLoaded = (index: number) => {
       const clamped = Math.max(0, Math.min(frameCount - 1, index));
       for (let i = clamped; i >= 0; i--) {
-        if (bitmaps[i]) return bitmaps[i];
+        const im = images[i];
+        if (im && im.complete && im.naturalWidth > 0) return im;
       }
       for (let i = clamped + 1; i < frameCount; i++) {
-        if (bitmaps[i]) return bitmaps[i];
+        const im = images[i];
+        if (im && im.complete && im.naturalWidth > 0) return im;
       }
       return null;
     };
@@ -107,9 +114,9 @@ export function ScrollSequence({
       const df = target.frame - current.frame;
       const dz = target.zoom - current.zoom;
 
-      if (Math.abs(df) > 0.008 || Math.abs(dz) > 0.0005) {
-        current.frame += df * 0.14;
-        current.zoom += dz * 0.14;
+      if (Math.abs(df) > 0.005 || Math.abs(dz) > 0.0004) {
+        current.frame += df * 0.12;
+        current.zoom += dz * 0.12;
         dirty = true;
       }
 
@@ -122,38 +129,20 @@ export function ScrollSequence({
 
     rafId = requestAnimationFrame(tick);
 
-    // Carregamento progressivo em lotes de 8 imagens para nunca travar a CPU do celular
+    // Se por algum motivo não veio do preloader, carrega em background
     let cancelled = false;
-
-    const loadBatch = (startIdx: number) => {
-      if (cancelled || startIdx >= frameCount) return;
-      const batchSize = 8;
-      let completed = 0;
-      const count = Math.min(batchSize, frameCount - startIdx);
-
-      for (let i = startIdx; i < startIdx + count; i++) {
+    if (!preloaded) {
+      for (let i = 0; i < frameCount; i++) {
         const img = new Image();
         img.decoding = "async";
         img.src = frameSrc(i);
-        const onDone = () => {
+        img.onload = () => {
           if (cancelled) return;
-          if (img.naturalWidth > 0) {
-            bitmaps[i] = img;
-            if (i === 0 || Math.abs(i - Math.round(current.frame)) <= 2) {
-              dirty = true;
-            }
-          }
-          completed++;
-          if (completed === count) {
-            setTimeout(() => loadBatch(startIdx + batchSize), 16);
-          }
+          images[i] = img;
+          if (i === 0 || Math.abs(i - Math.round(current.frame)) <= 2) dirty = true;
         };
-        img.onload = onDone;
-        img.onerror = onDone;
       }
-    };
-
-    loadBatch(0);
+    }
 
     const onResize = () => {
       dirty = true;
@@ -171,7 +160,7 @@ export function ScrollSequence({
         return;
       }
 
-      gsap.set(q("[data-seq]"), { autoAlpha: 0, y: 22 });
+      gsap.set(q("[data-seq]"), { autoAlpha: 0, y: 20 });
 
       const tl = gsap.timeline({
         defaults: { ease: "none" },
@@ -179,17 +168,17 @@ export function ScrollSequence({
           trigger: section,
           start: "top top",
           end: "bottom bottom",
-          scrub: true,
+          scrub: 0.6,
         },
       });
 
       tl.to(target, { frame: frameCount - 1, duration: 1 }, 0)
-        .to(q('[data-seq="intro"]'), { autoAlpha: 1, y: 0, duration: 0.08, ease: "power2.out" }, 0.02)
-        .to(q('[data-seq="intro"]'), { autoAlpha: 0, y: -20, duration: 0.08, ease: "power2.in" }, 0.28)
-        .to(q('[data-seq="feature"]'), { autoAlpha: 1, y: 0, duration: 0.08, ease: "power2.out" }, 0.36)
-        .to(q('[data-seq="feature"]'), { autoAlpha: 0, y: -20, duration: 0.08, ease: "power2.in" }, 0.62)
-        .to(target, { zoom: 0.9, duration: 0.14, ease: "power2.inOut" }, 0.64)
-        .to(q('[data-seq="finale"]'), { autoAlpha: 1, y: 0, duration: 0.1, ease: "power2.out" }, 0.72);
+        .to(q('[data-seq="intro"]'), { autoAlpha: 1, y: 0, duration: 0.1, ease: "power2.out" }, 0.02)
+        .to(q('[data-seq="intro"]'), { autoAlpha: 0, y: -18, duration: 0.1, ease: "power2.in" }, 0.28)
+        .to(q('[data-seq="feature"]'), { autoAlpha: 1, y: 0, duration: 0.1, ease: "power2.out" }, 0.36)
+        .to(q('[data-seq="feature"]'), { autoAlpha: 0, y: -18, duration: 0.1, ease: "power2.in" }, 0.64)
+        .to(target, { zoom: 0.9, duration: 0.14, ease: "power2.inOut" }, 0.66)
+        .to(q('[data-seq="finale"]'), { autoAlpha: 1, y: 0, duration: 0.12, ease: "power2.out" }, 0.74);
     }, section);
 
     return () => {
@@ -203,12 +192,12 @@ export function ScrollSequence({
   return (
     <section
       ref={sectionRef}
-      className="relative h-[240svh] md:h-[220svh] motion-reduce:h-svh bg-white"
+      className="relative h-[360svh] md:h-[280svh] motion-reduce:h-svh bg-white"
     >
       <div className="sticky top-0 h-svh overflow-hidden bg-white">
         <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true" />
 
-        {/* Textos superiores (abaixo do header fixo) */}
+        {/* Textos superiores */}
         <div className="pointer-events-none absolute inset-x-0 top-[76px] sm:top-[92px] px-5 sm:px-6 text-center">
           <div className="relative mx-auto max-w-[820px]">
             <h2 data-seq="intro" className="t-headline absolute inset-x-0 top-0 text-[#1d1d1f]">
@@ -221,7 +210,7 @@ export function ScrollSequence({
           </div>
         </div>
 
-        {/* Final da animação: Nome + Provar no rosto e Garantir o meu */}
+        {/* Final da animação */}
         <div
           data-seq="finale"
           className="absolute inset-x-0 bottom-[6svh] sm:bottom-[7svh] px-5 sm:px-6 text-center"

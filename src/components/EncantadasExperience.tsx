@@ -5,6 +5,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import type { CatalogData, Product, TryOnManifest } from "@/types/catalog";
 import { isTryOnApproved } from "@/lib/catalog";
+import { preloadAllSiteAssets } from "@/lib/asset-preloader";
 import { getProductMedia } from "@/lib/product-media";
 import { trackEvent } from "@/lib/telemetry";
 import { SiteHeader } from "./SiteHeader";
@@ -76,8 +77,34 @@ const ANNA_CAROUSEL_SLIDES = [
 export function EncantadasExperience({ catalog, manifest }: EncantadasExperienceProps) {
   const [isTryOnOpen, setIsTryOnOpen] = useState(false);
   const [tryVariantId, setTryVariantId] = useState(catalog.products[0].variants[0].id);
+  const [loadProgress, setLoadProgress] = useState(0);
+  const [isSiteReady, setIsSiteReady] = useState(false);
 
   const rootRef = useRef<HTMLDivElement | null>(null);
+
+  // Pré-carrega e decodifica todos os 240 quadros dos vídeos e fotos no início (zero flicks!)
+  useEffect(() => {
+    let mounted = true;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    preloadAllSiteAssets((pct) => {
+      if (mounted) setLoadProgress(pct);
+    }).finally(() => {
+      if (!mounted) return;
+      setTimeout(() => {
+        if (!mounted) return;
+        document.body.style.overflow = prevOverflow;
+        setIsSiteReady(true);
+        ScrollTrigger.refresh();
+      }, 280);
+    });
+
+    return () => {
+      mounted = false;
+      document.body.style.overflow = prevOverflow;
+    };
+  }, []);
 
   const productById = useMemo(() => {
     const map: Record<string, Product> = {};
@@ -163,14 +190,14 @@ export function EncantadasExperience({ catalog, manifest }: EncantadasExperience
         }
       );
 
-      // 3. Entradas suaves sem bloquear scroll
+      // 3. Entradas suaves sem flicks (apenas deslocamento sutil Y, sem sumir com os elementos)
       ScrollTrigger.batch("[data-reveal]", {
-        start: "top 88%",
+        start: "top 92%",
         onEnter: (els) =>
           gsap.fromTo(
             els,
-            { autoAlpha: 0, y: 28 },
-            { autoAlpha: 1, y: 0, duration: 0.8, stagger: 0.06, ease: "expo.out", overwrite: true }
+            { y: 18 },
+            { y: 0, duration: 0.7, stagger: 0.05, ease: "power2.out", overwrite: true }
           ),
       });
     }, root);
@@ -186,6 +213,31 @@ export function EncantadasExperience({ catalog, manifest }: EncantadasExperience
 
   return (
     <div ref={rootRef} id="topo" className="bg-white text-[#1d1d1f]">
+      {/* Tela de Loading Inicial "ENCANTADAS" — Pré-carrega 100% dos vídeos e fotos */}
+      <div
+        aria-hidden={isSiteReady}
+        className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-white transition-opacity duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          isSiteReady ? "pointer-events-none opacity-0" : "opacity-100"
+        }`}
+      >
+        <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-[#6e6e73]">
+          Coleção Assinada por Anna
+        </p>
+        <h2 className="mt-3 text-[22px] sm:text-[26px] font-medium uppercase tracking-[0.38em] text-[#1d1d1f]">
+          Encantadas
+        </h2>
+
+        <div className="mt-8 h-[2px] w-48 overflow-hidden rounded-full bg-black/[0.08]">
+          <div
+            className="h-full bg-[#1d1d1f] transition-all duration-150 ease-out"
+            style={{ width: `${loadProgress}%` }}
+          />
+        </div>
+        <span className="mt-3 text-[12px] text-[#6e6e73] tabular-nums">
+          {loadProgress}%
+        </span>
+      </div>
+
       <SiteHeader onTry={() => openTry(firstApprovedVariantId)} />
 
       <main className="w-full max-w-full overflow-x-clip">
