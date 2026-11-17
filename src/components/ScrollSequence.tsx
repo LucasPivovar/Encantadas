@@ -160,7 +160,8 @@ export function ScrollSequence({
         return;
       }
 
-      gsap.set(q("[data-seq]"), { autoAlpha: 0, y: 20 });
+      gsap.set(q('[data-seq="intro"]'), { autoAlpha: 1, y: 0 });
+      gsap.set(q('[data-seq="feature"], [data-seq="finale"]'), { autoAlpha: 0, y: 20 });
 
       const tl = gsap.timeline({
         defaults: { ease: "none" },
@@ -168,13 +169,12 @@ export function ScrollSequence({
           trigger: section,
           start: "top top",
           end: "bottom bottom",
-          scrub: 0.6,
+          scrub: 0.5,
         },
       });
 
       tl.to(target, { frame: frameCount - 1, duration: 1 }, 0)
-        .to(q('[data-seq="intro"]'), { autoAlpha: 1, y: 0, duration: 0.1, ease: "power2.out" }, 0.02)
-        .to(q('[data-seq="intro"]'), { autoAlpha: 0, y: -18, duration: 0.1, ease: "power2.in" }, 0.28)
+        .to(q('[data-seq="intro"]'), { autoAlpha: 0, y: -18, duration: 0.1, ease: "power2.in" }, 0.26)
         .to(q('[data-seq="feature"]'), { autoAlpha: 1, y: 0, duration: 0.1, ease: "power2.out" }, 0.36)
         .to(q('[data-seq="feature"]'), { autoAlpha: 0, y: -18, duration: 0.1, ease: "power2.in" }, 0.64)
         .to(target, { zoom: 0.9, duration: 0.14, ease: "power2.inOut" }, 0.66)
