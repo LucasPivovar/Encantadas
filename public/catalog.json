@@ -1,0 +1,184 @@
+{
+  "version": "2026.11.17-ar.3",
+  "isPrototypeData": false,
+  "collection": {
+    "id": "col-encantadas",
+    "slug": "encantadas",
+    "name": "Encantadas",
+    "tagline": "Uma coleção de Anna.",
+    "description": "Quatro óculos autorais esculpidos em ouro 18K e acetato italiano.",
+    "heroMedia": "/images/ar/anna-hero-clean.jpg",
+    "publicationStatus": "published",
+    "version": "2026.11.17-ar.3"
+  },
+  "products": [
+    {
+      "id": "prod-pantera",
+      "collectionId": "col-encantadas",
+      "slug": "pantera-rimless-ouro",
+      "name": "Pantera — Sem Aro & Ouro 18K",
+      "subtitle": "Lentes degradê sem aro com pantera esculpida e esmalte negro",
+      "description": "Leveza absoluta sobre o rosto. Lentes chanfradas sem aro em degradê chá abraçadas por duas panteras esculpidas em ouro 18K com manchas pintadas à mão.",
+      "dimensionsMm": {
+        "totalWidth": 140,
+        "lensWidth": 56,
+        "lensHeight": 45,
+        "bridge": 18,
+        "templeLength": 140
+      },
+      "heroImage": "/images/ar/ar-03-rimless-pantera.png",
+      "orthographicSheet": "/images/ar/ar-angle-03-rimless-pantera.png",
+      "glbUrl": "/models/oculos-03-rimless-pantera.glb",
+      "variants": [
+        {
+          "id": "var-pantera-cha",
+          "productId": "prod-pantera",
+          "sku": "ENC-01-PNT-CHA",
+          "colorName": "Chá Degradê & Pantera Ouro",
+          "colorHex": "#B88E68",
+          "lensDescription": "Lente sem aro em degradê chá translúcido",
+          "materialDescription": "Metal dourado 18K com pantera esmaltada e ponteiras tartaruga",
+          "gallery": [
+            "/images/ar/ar-03-rimless-pantera.png",
+            "/images/ar/ar-angle-03-rimless-pantera.png",
+            "/images/ar/anna-hero-clean.jpg"
+          ],
+          "purchaseUrl": "https://loja.exemplo.com/encantadas?sku=ENC-01-PNT-CHA",
+          "commercialAvailability": "available",
+          "frameStyle": "rimless-panther",
+          "glbUrl": "/models/oculos-03-rimless-pantera.glb"
+        },
+        {
+          "id": "var-pantera-fume",
+          "productId": "prod-pantera",
+          "sku": "ENC-01-PNT-FUM",
+          "colorName": "Café Fumê & Pantera Ouro",
+          "colorHex": "#4A3226",
+          "lensDescription": "Lente sem aro em marrom fumê",
+          "materialDescription": "Metal dourado 18K com pantera esmaltada e ponteiras café",
+          "gallery": [
+            "/images/ar/ar-03-rimless-pantera.png",
+            "/images/ar/anna-look-pantera-2.jpg"
+          ],
+          "purchaseUrl": "https://loja.exemplo.com/encantadas?sku=ENC-01-PNT-FUM",
+          "commercialAvailability": "available",
+          "frameStyle": "rimless-panther",
+          "glbUrl": "/models/oculos-03-rimless-pantera.glb"
+        }
+      ]
+    },
+    {
+      "id": "prod-imperial",
+      "collectionId": "col-encantadas",
+      "slug": "imperial-leao-dourado",
+      "name": "Imperial — Leão & Ponte Dupla",
+      "subtitle": "Tartaruga escuro com medalhão de leão em ouro 18K",
+      "description": "Aro navegador em acetato tartaruga escuro com ponte dupla dourada, rebites frontais e escultura de leão em alto-relevo nas charneiras.",
+      "dimensionsMm": {
+        "totalWidth": 144,
+        "lensWidth": 55,
+        "lensHeight": 43,
+        "bridge": 19,
+        "templeLength": 142
+      },
+      "heroImage": "/images/ar/ar-01-imperial-leao.png",
+      "orthographicSheet": "/images/ar/ar-angle-01-imperial-leao.png",
+      "glbUrl": "/models/oculos-01-imperial-leao.glb",
+      "variants": [
+        {
+          "id": "var-imperial-leao",
+          "productId": "prod-imperial",
+          "sku": "ENC-02-IMP-LEO",
+          "colorName": "Tartaruga Imperial & Leão Ouro 18K",
+          "colorHex": "#3B2316",
+          "lensDescription": "Lente marrom degradê UV400",
+          "materialDescription": "Acetato tartaruga escuro, ponte dupla dourada e leão esculpido",
+          "gallery": [
+            "/images/ar/ar-01-imperial-leao.png",
+            "/images/ar/ar-angle-01-imperial-leao.png"
+          ],
+          "purchaseUrl": "https://loja.exemplo.com/encantadas?sku=ENC-02-IMP-LEO",
+          "commercialAvailability": "available",
+          "frameStyle": "imperial-lion",
+          "glbUrl": "/models/oculos-01-imperial-leao.glb"
+        }
+      ]
+    },
+    {
+      "id": "prod-navigator",
+      "collectionId": "col-encantadas",
+      "slug": "navigator-noite-ambar",
+      "name": "Solaris — Navigator & Lente Âmbar",
+      "subtitle": "Acetato preto polido com lentes solares laranja-âmbar",
+      "description": "Armação aviador estruturada em acetato preto brilhante, detalhes horizontais em T dourados nas dobradiças e lentes âmbar luminosas.",
+      "dimensionsMm": {
+        "totalWidth": 145,
+        "lensWidth": 56,
+        "lensHeight": 46,
+        "bridge": 19,
+        "templeLength": 144
+      },
+      "heroImage": "/images/ar/ar-02-navigator-ambar.png",
+      "orthographicSheet": "/images/ar/ar-angle-02-navigator-ambar.png",
+      "glbUrl": "/models/oculos-02-navigator-ambar.glb",
+      "variants": [
+        {
+          "id": "var-navigator-ambar",
+          "productId": "prod-navigator",
+          "sku": "ENC-03-NAV-AMB",
+          "colorName": "Preto Obsidiana & Lente Âmbar",
+          "colorHex": "#D96B27",
+          "lensDescription": "Lente âmbar solar translúcida",
+          "materialDescription": "Acetato italiano preto com charneiras em T douradas",
+          "gallery": [
+            "/images/ar/ar-02-navigator-ambar.png",
+            "/images/ar/ar-angle-02-navigator-ambar.png",
+            "/images/ar/anna-look-ambar.jpg"
+          ],
+          "purchaseUrl": "https://loja.exemplo.com/encantadas?sku=ENC-03-NAV-AMB",
+          "commercialAvailability": "available",
+          "frameStyle": "navigator-amber",
+          "glbUrl": "/models/oculos-02-navigator-ambar.glb"
+        }
+      ]
+    },
+    {
+      "id": "prod-bold",
+      "collectionId": "col-encantadas",
+      "slug": "bold-tartaruga-classico",
+      "name": "Aurea — Retangular Tartaruga",
+      "subtitle": "Silhueta retangular bold em acetato tartaruga mel e café",
+      "description": "Proporção retangular esculpida em acetato tartaruga clássico com lentes café escuro e emblema duplo dourado nas hastes.",
+      "dimensionsMm": {
+        "totalWidth": 142,
+        "lensWidth": 52,
+        "lensHeight": 36,
+        "bridge": 20,
+        "templeLength": 142
+      },
+      "heroImage": "/images/ar/ar-04-bold-tartaruga.png",
+      "orthographicSheet": "/images/ar/ar-angle-04-bold-tartaruga.png",
+      "glbUrl": "/models/oculos-04-bold-tartaruga.glb",
+      "variants": [
+        {
+          "id": "var-bold-tartaruga",
+          "productId": "prod-bold",
+          "sku": "ENC-04-BLD-TRT",
+          "colorName": "Tartaruga Clássico Mel & Café",
+          "colorHex": "#6B3818",
+          "lensDescription": "Lente café escuro sólido UV400",
+          "materialDescription": "Acetato tartaruga italiano 6mm com emblema dourado nas hastes",
+          "gallery": [
+            "/images/ar/ar-04-bold-tartaruga.png",
+            "/images/ar/ar-angle-04-bold-tartaruga.png",
+            "/images/ar/anna-look-bold.jpg"
+          ],
+          "purchaseUrl": "https://loja.exemplo.com/encantadas?sku=ENC-04-BLD-TRT",
+          "commercialAvailability": "available",
+          "frameStyle": "bold-tortoise",
+          "glbUrl": "/models/oculos-04-bold-tartaruga.glb"
+        }
+      ]
+    }
+  ]
+}

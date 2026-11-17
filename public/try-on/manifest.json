@@ -1,0 +1,76 @@
+{
+  "version": "2026.11.17-launch.2",
+  "config": {
+    "enabled": true,
+    "provider": "prototype-overlay",
+    "publishedCatalogVersion": "2026.11.17-launch.2",
+    "supportedCapabilities": [
+      "local-camera-preview",
+      "variant-switch",
+      "state-simulation",
+      "glb-3d-inspection"
+    ]
+  },
+  "assets": [
+    {
+      "id": "asset-pantera-cha",
+      "variantId": "var-pantera-cha",
+      "sku": "ENC-01-PNT-CHA",
+      "provider": "prototype-overlay",
+      "providerAssetId": "rimless-panther-tea",
+      "assetUrl": "/models/oculos-03-rimless-pantera.glb",
+      "version": "2.0.0",
+      "calibrationVersion": "cal-2",
+      "status": "approved",
+      "approvedAt": "2026-11-17T12:00:00Z"
+    },
+    {
+      "id": "asset-pantera-fume",
+      "variantId": "var-pantera-fume",
+      "sku": "ENC-01-PNT-FUM",
+      "provider": "prototype-overlay",
+      "providerAssetId": "rimless-panther-fume",
+      "assetUrl": "/models/oculos-03-rimless-pantera.glb",
+      "version": "2.0.0",
+      "calibrationVersion": "cal-2",
+      "status": "approved",
+      "approvedAt": "2026-11-17T12:00:00Z"
+    },
+    {
+      "id": "asset-imperial-leao",
+      "variantId": "var-imperial-leao",
+      "sku": "ENC-02-IMP-LEO",
+      "provider": "prototype-overlay",
+      "providerAssetId": "imperial-lion-gold",
+      "assetUrl": "/models/oculos-01-imperial-leao.glb",
+      "version": "2.0.0",
+      "calibrationVersion": "cal-2",
+      "status": "approved",
+      "approvedAt": "2026-11-17T12:00:00Z"
+    },
+    {
+      "id": "asset-navigator-ambar",
+      "variantId": "var-navigator-ambar",
+      "sku": "ENC-03-NAV-AMB",
+      "provider": "prototype-overlay",
+      "providerAssetId": "navigator-black-amber",
+      "assetUrl": "/models/oculos-02-navigator-ambar.glb",
+      "version": "2.0.0",
+      "calibrationVersion": "cal-2",
+      "status": "approved",
+      "approvedAt": "2026-11-17T12:00:00Z"
+    },
+    {
+      "id": "asset-bold-tartaruga",
+      "variantId": "var-bold-tartaruga",
+      "sku": "ENC-04-BLD-TRT",
+      "provider": "prototype-overlay",
+      "providerAssetId": "bold-classic-tortoise",
+      "assetUrl": "/models/oculos-04-bold-tartaruga.glb",
+      "version": "2.0.0",
+      "calibrationVersion": "cal-2",
+      "status": "approved",
+      "approvedAt": "2026-11-17T12:00:00Z"
+    }
+  ]
+}
