@@ -221,7 +221,7 @@ export function EncantadasExperience({ catalog, manifest }: EncantadasExperience
         }`}
       >
         <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-[#6e6e73]">
-          Coleção por Anna
+          Coleção criada por Anna
         </p>
         <h2 className="mt-3 text-[22px] sm:text-[26px] font-medium uppercase tracking-[0.38em] text-[#1d1d1f]">
           Encantadas
@@ -266,7 +266,7 @@ export function EncantadasExperience({ catalog, manifest }: EncantadasExperience
             <div className="mx-auto w-full max-w-[1320px] px-6 pb-8 sm:px-10 sm:pb-12 md:pl-24 lg:pl-36 xl:pl-44 md:pr-10 md:pb-0">
               <div data-hero-copy className="pointer-events-auto max-w-[440px]">
                 <p className="text-[11px] sm:text-[12px] font-medium uppercase tracking-[0.22em] sm:tracking-[0.26em] text-[#1d1d1f]/80">
-                  Lançamento Exclusivo · Por Anna
+                  Lançamento Exclusivo · Coleção criada por Anna
                 </p>
 
                 <h1 className="mt-2 sm:mt-3 text-[clamp(34px,8.5vw,68px)] font-semibold leading-[1.03] tracking-[-0.024em] text-[#1d1d1f]">
@@ -526,7 +526,7 @@ export function EncantadasExperience({ catalog, manifest }: EncantadasExperience
              ============================================================ */}
           <footer className="border-t border-[#d2d2d7] bg-[#f5f5f7] px-6 py-8 text-[12px] text-[#6e6e73]">
             <div className="mx-auto flex max-w-[1160px] flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <span>Encantadas · Coleção de Anna</span>
+              <span>Encantadas · Coleção criada por Anna</span>
               <span>© 2026 Encantadas. Todos os direitos reservados.</span>
             </div>
           </footer>
