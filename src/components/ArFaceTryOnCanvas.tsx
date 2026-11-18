@@ -203,28 +203,27 @@ export function ArFaceTryOnCanvas({
           ensureMeshUVs(mesh.geometry);
 
           if (mName.includes("Lens")) {
-            // Vidro óptico físico translúcido com reflexo natural do ambiente (sem manchas brancas artificiais)
+            // Vidro óptico físico translúcido com reflexo real da câmera/ambiente
             mesh.renderOrder = 3;
-            const lensOpacity =
-              style === "rimless"
-                ? 0.64
-                : style === "navigator"
-                ? 0.72
-                : style === "bold"
-                ? 0.82
-                : 0.78;
+            const lensOpacity = style.includes("rimless")
+              ? 0.62
+              : style.includes("navigator")
+              ? 0.68
+              : style.includes("bold")
+              ? 0.82
+              : 0.76;
             mesh.material = new THREE.MeshPhysicalMaterial({
               map: tintTex,
               color: new THREE.Color(0xffffff),
               transparent: true,
               opacity: lensOpacity,
-              roughness: 0.04,
-              metalness: 0.02,
+              roughness: 0.03,
+              metalness: 0.0,
               ior: 1.52,
               reflectivity: 0.9,
               clearcoat: 1.0,
               clearcoatRoughness: 0.03,
-              envMapIntensity: 1.45,
+              envMapIntensity: 1.15,
               depthWrite: false,
               side: THREE.DoubleSide,
             });
@@ -242,46 +241,46 @@ export function ArFaceTryOnCanvas({
           ) {
             mesh.renderOrder = 2;
             mesh.material = new THREE.MeshPhysicalMaterial({
-              color: new THREE.Color(0.92, 0.76, 0.39),
-              metalness: 1.0,
-              roughness: 0.16,
-              clearcoat: 0.5,
-              clearcoatRoughness: 0.08,
-              envMapIntensity: 2.0,
+              color: new THREE.Color(0.86, 0.70, 0.36),
+              metalness: 0.95,
+              roughness: 0.22,
+              clearcoat: 0.35,
+              clearcoatRoughness: 0.10,
+              envMapIntensity: 1.35,
             });
           } else if (mName.includes("NosePad_")) {
             mesh.renderOrder = 2;
             mesh.material = new THREE.MeshPhysicalMaterial({
               color: new THREE.Color(0xfaf6f0),
               transparent: true,
-              opacity: 0.5,
-              roughness: 0.14,
-              clearcoat: 0.9,
+              opacity: 0.48,
+              roughness: 0.16,
+              clearcoat: 0.8,
               depthWrite: false,
             });
           } else if (
             mName.includes("PantherSpot") ||
-            style === "navigator-amber"
+            style.includes("navigator")
           ) {
             mesh.renderOrder = 2;
             mesh.material = new THREE.MeshPhysicalMaterial({
-              color: new THREE.Color(0x11100f),
-              metalness: 0.04,
-              roughness: 0.07,
-              clearcoat: 1.0,
-              clearcoatRoughness: 0.02,
-              envMapIntensity: 1.9,
+              color: new THREE.Color(0x0f0e0d),
+              metalness: 0.02,
+              roughness: 0.12,
+              clearcoat: 0.92,
+              clearcoatRoughness: 0.05,
+              envMapIntensity: 1.1,
             });
           } else {
             mesh.renderOrder = 2;
             mesh.material = new THREE.MeshPhysicalMaterial({
-              map: style === "bold-tortoise" ? tortClassicTex : tortDarkTex,
+              map: style.includes("bold") ? tortClassicTex : tortDarkTex,
               color: new THREE.Color(0xffffff),
-              metalness: 0.02,
-              roughness: 0.1,
-              clearcoat: 1.0,
-              clearcoatRoughness: 0.02,
-              envMapIntensity: 1.7,
+              metalness: 0.0,
+              roughness: 0.14,
+              clearcoat: 0.90,
+              clearcoatRoughness: 0.06,
+              envMapIntensity: 1.05,
             });
           }
         }
@@ -321,20 +320,56 @@ export function ArFaceTryOnCanvas({
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.35;
+    renderer.toneMappingExposure = 1.0;
     container.innerHTML = "";
     container.appendChild(renderer.domElement);
 
+    // Sonda de Luz Ambiente e Reflexo ao Vivo da Câmera (integra o 3D à iluminação real do local)
     const pmrem = new THREE.PMREMGenerator(renderer);
-    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    const fallbackEnv = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 
-    const keyLight = new THREE.DirectionalLight(0xfffaf2, 3.2);
-    keyLight.position.set(0.28, 0.48, 0.75);
+    const envCanvas = document.createElement("canvas");
+    envCanvas.width = 128;
+    envCanvas.height = 64;
+    const envCtx = envCanvas.getContext("2d");
+    if (envCtx) {
+      envCtx.fillStyle = "#8a857e";
+      envCtx.fillRect(0, 0, 128, 64);
+    }
+    const liveEnvTex = new THREE.CanvasTexture(envCanvas);
+    liveEnvTex.mapping = THREE.EquirectangularReflectionMapping;
+    liveEnvTex.colorSpace = THREE.SRGBColorSpace;
+    scene.environment = fallbackEnv;
+
+    const probeCanvas = document.createElement("canvas");
+    probeCanvas.width = 24;
+    probeCanvas.height = 16;
+    const probeCtx = probeCanvas.getContext("2d", { willReadFrequently: true });
+
+    const hemiLight = new THREE.HemisphereLight(0xf6f2ec, 0x7a6a5c, 1.0);
+    scene.add(hemiLight);
+
+    const keyLight = new THREE.DirectionalLight(0xfffaf2, 1.5);
+    keyLight.position.set(0.25, 0.45, 0.75);
     scene.add(keyLight);
 
-    const rimLight = new THREE.DirectionalLight(0xffe099, 2.2);
+    const rimLight = new THREE.DirectionalLight(0xffe8c8, 0.55);
     rimLight.position.set(-0.45, 0.25, 0.45);
     scene.add(rimLight);
+
+    const ambientState = {
+      topR: 0.9,
+      topG: 0.88,
+      topB: 0.85,
+      botR: 0.5,
+      botG: 0.45,
+      botB: 0.4,
+      luma: 0.55,
+      dirX: 0.25,
+      hasLiveEnv: false,
+      lastProbeMs: 0,
+      lastEnvMs: 0,
+    };
 
     // Grupo Âncora 3D — começa invisível até mapear o rosto
     const faceAnchor = new THREE.Group();
@@ -466,6 +501,104 @@ export function ArFaceTryOnCanvas({
       const video = videoRef.current;
       const cw = container.clientWidth;
       const ch = Math.max(1, container.clientHeight);
+      const nowMs = performance.now();
+
+      // Atualiza iluminação ambiente real a partir do vídeo da câmera (~10x/s)
+      if (video && video.readyState >= 2 && probeCtx && nowMs - ambientState.lastProbeMs > 95) {
+        ambientState.lastProbeMs = nowMs;
+        try {
+          probeCtx.save();
+          probeCtx.scale(-1, 1);
+          probeCtx.drawImage(video, -24, 0, 24, 16);
+          probeCtx.restore();
+          const data = probeCtx.getImageData(0, 0, 24, 16).data;
+
+          let topR = 0, topG = 0, topB = 0, topCnt = 0;
+          let botR = 0, botG = 0, botB = 0, botCnt = 0;
+          let leftLuma = 0, rightLuma = 0;
+
+          for (let y = 0; y < 16; y++) {
+            for (let x = 0; x < 24; x++) {
+              const idx = (y * 24 + x) * 4;
+              const r = data[idx] / 255;
+              const g = data[idx + 1] / 255;
+              const b = data[idx + 2] / 255;
+              const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+              if (y < 7) {
+                topR += r; topG += g; topB += b; topCnt++;
+              } else {
+                botR += r; botG += g; botB += b; botCnt++;
+              }
+              if (x < 12) leftLuma += lum;
+              else rightLuma += lum;
+            }
+          }
+
+          if (topCnt > 0 && botCnt > 0) {
+            const tR = topR / topCnt, tG = topG / topCnt, tB = topB / topCnt;
+            const bR = botR / botCnt, bG = botG / botCnt, bB = botB / botCnt;
+            const avgLuma = THREE.MathUtils.clamp((leftLuma + rightLuma) / (24 * 16), 0.12, 0.95);
+            const dirBalance = THREE.MathUtils.clamp((rightLuma - leftLuma) / (leftLuma + rightLuma + 0.001) * 2.2, -0.8, 0.8);
+
+            const s = 0.22;
+            ambientState.topR += (tR - ambientState.topR) * s;
+            ambientState.topG += (tG - ambientState.topG) * s;
+            ambientState.topB += (tB - ambientState.topB) * s;
+            ambientState.botR += (bR - ambientState.botR) * s;
+            ambientState.botG += (bG - ambientState.botG) * s;
+            ambientState.botB += (bB - ambientState.botB) * s;
+            ambientState.luma += (avgLuma - ambientState.luma) * s;
+            ambientState.dirX += (dirBalance - ambientState.dirX) * s;
+
+            hemiLight.color.setRGB(
+              Math.min(1, ambientState.topR * 1.15 + 0.12),
+              Math.min(1, ambientState.topG * 1.15 + 0.12),
+              Math.min(1, ambientState.topB * 1.15 + 0.12)
+            );
+            hemiLight.groundColor.setRGB(
+              ambientState.botR * 0.95 + 0.08,
+              ambientState.botG * 0.95 + 0.08,
+              ambientState.botB * 0.95 + 0.08
+            );
+            hemiLight.intensity = 0.55 + ambientState.luma * 1.15;
+
+            keyLight.color.setRGB(
+              Math.min(1, ambientState.topR * 0.65 + 0.45),
+              Math.min(1, ambientState.topG * 0.65 + 0.43),
+              Math.min(1, ambientState.topB * 0.65 + 0.40)
+            );
+            keyLight.intensity = 0.75 + ambientState.luma * 1.65;
+            keyLight.position.set(ambientState.dirX * 0.75, 0.48, 0.75);
+
+            rimLight.intensity = 0.25 + ambientState.luma * 0.65;
+            renderer.toneMappingExposure = 0.84 + ambientState.luma * 0.30;
+          }
+
+          // Atualiza mapa de reflexão ao vivo da câmera (~4x/s)
+          if (envCtx && nowMs - ambientState.lastEnvMs > 240) {
+            ambientState.lastEnvMs = nowMs;
+            envCtx.save();
+            envCtx.scale(-1, 1);
+            envCtx.drawImage(probeCanvas, -128, 0, 128, 64);
+            envCtx.restore();
+            // Leve brilho difuso superior para simular janela/teto natural
+            const skyGrad = envCtx.createLinearGradient(0, 0, 0, 26);
+            skyGrad.addColorStop(0, "rgba(255, 252, 245, 0.28)");
+            skyGrad.addColorStop(1, "rgba(255, 252, 245, 0)");
+            envCtx.fillStyle = skyGrad;
+            envCtx.fillRect(0, 0, 128, 26);
+
+            liveEnvTex.needsUpdate = true;
+            if (!ambientState.hasLiveEnv) {
+              ambientState.hasLiveEnv = true;
+              scene.environment = liveEnvTex;
+            }
+          }
+        } catch {
+          // Ignore transient canvas security/video frame errors
+        }
+      }
 
       if (
         faceLandmarker &&
@@ -628,6 +761,8 @@ export function ArFaceTryOnCanvas({
         faceLandmarker.close();
       }
       shadowTex.dispose();
+      liveEnvTex.dispose();
+      fallbackEnv.dispose();
       pmrem.dispose();
       renderer.dispose();
     };
