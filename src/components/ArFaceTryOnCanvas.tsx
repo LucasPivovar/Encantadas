@@ -97,11 +97,11 @@ function createTortoiseTexture(dark: boolean): THREE.CanvasTexture {
     ? ["rgba(82, 36, 12, 0.64)", "rgba(126, 58, 18, 0.42)", "rgba(14, 7, 3, 0.78)"]
     : ["rgba(196, 98, 24, 0.82)", "rgba(232, 138, 44, 0.68)", "rgba(18, 8, 3, 0.82)"];
 
-  for (let i = 0; i < 110; i++) {
+  for (let i = 0; i < 55; i++) {
     const x = (Math.sin(i * 12.9898) * 0.5 + 0.5) * 256;
     const y = (Math.cos(i * 78.233) * 0.5 + 0.5) * 256;
-    const r = 12 + (i % 26);
-    const g = ctx.createRadialGradient(x, y, 2, x, y, r);
+    const r = 26 + (i % 28);
+    const g = ctx.createRadialGradient(x, y, 4, x, y, r);
     g.addColorStop(0, colors[i % colors.length]);
     g.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = g;
@@ -325,14 +325,29 @@ export function ArFaceTryOnCanvas({
     faceAnchor.visible = false;
     scene.add(faceAnchor);
 
-    // 1. Oclusor Craniano Invisível (calibrado com cabeça.glb: 64.9mm meia-largura)
+    // 1. Oclusor Anatômico Duplo (Crânio + Escudo Facial):
+    // Esconde 100% da haste oposta atrás do rosto/cabeça ao virar de perfil sem cortar as lentes
+    const occluderMat = new THREE.MeshBasicMaterial({
+      colorWrite: false,
+      depthWrite: true,
+    });
     const headOccluder = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.064, 0.060, 0.21, 24),
-      new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: true })
+      new THREE.CylinderGeometry(0.065, 0.059, 0.22, 28),
+      occluderMat
     );
-    headOccluder.position.set(0, -0.01, -0.078);
+    headOccluder.scale.set(1.0, 1.0, 1.22);
+    headOccluder.position.set(0, -0.015, -0.074); // frente em z = +0.005 (atrás das lentes em +0.015)
     headOccluder.renderOrder = 0;
     faceAnchor.add(headOccluder);
+
+    const faceShield = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.061, 0.052, 0.17, 24),
+      occluderMat
+    );
+    faceShield.scale.set(1.0, 1.0, 0.40);
+    faceShield.position.set(0, -0.022, -0.018); // frente em z = +0.006 (atrás das lentes/aros, bloqueia hastes cruzando o rosto)
+    faceShield.renderOrder = 0;
+    faceAnchor.add(faceShield);
 
     // 2. Sombra de Contato Anatômica sob a Ponte e Lentes
     const shadowCanvas = document.createElement("canvas");
