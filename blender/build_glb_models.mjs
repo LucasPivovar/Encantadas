@@ -483,36 +483,47 @@ function generateModel01_ImperialLeao() {
   const meshes = [];
   const cx = 0.036, cy = 0.0, lw = 0.055, lh = 0.043;
 
-  // Lentes e Aros finos chanfrados de Acetato Tartaruga Escuro (2.4mm) com recorte navegador diagonal
+  // Lentes e Aros finos chanfrados de Acetato Tartaruga Escuro (2.2mm) com recorte navegador fiel à foto
   for (const side of [-1, 1]) {
     const sfx = side < 0 ? "L" : "R";
-    meshes.push(buildLensMesh(`M01_Lens_${sfx}`, 4, side, cx, cy, lw, lh, 0.0018, 3.8, 0.91, 0.04, 0.0, 0.24));
-    meshes.push(buildAcetateRimMesh(`M01_Rim_${sfx}`, 1, side, cx, cy, lw, lh, 0.0024, 0.0038, 3.8, 0.91, 0.04, 0.0, 0.24));
+    meshes.push(buildLensMesh(`M01_Lens_${sfx}`, 4, side, cx, cy, lw, lh, 0.0018, 4.0, 0.95, 0.03, 0.0, 0.28));
+    meshes.push(buildAcetateRimMesh(`M01_Rim_${sfx}`, 1, side, cx, cy, lw, lh, 0.0022, 0.0036, 4.0, 0.95, 0.03, 0.0, 0.28));
   }
 
-  // Barra Superior Metálica Dourada embutida na linha do aro + Ponte Inferior com parafusos
+  // Barra Superior Metálica Dourada embutida na borda superior + hastes diagonais da ponte dupla
   const topBarPts = [
-    applyPantoTilt(-0.025, cy + lh * 0.445, 0.0018),
-    applyPantoTilt(-0.011, cy + lh * 0.435, 0.0024),
-    applyPantoTilt(0.0,    cy + lh * 0.430, 0.0025),
-    applyPantoTilt(0.011,  cy + lh * 0.435, 0.0024),
-    applyPantoTilt(0.025,  cy + lh * 0.445, 0.0018),
+    applyPantoTilt(-0.026, cy + lh * 0.485, 0.0016),
+    applyPantoTilt(-0.011, cy + lh * 0.475, 0.0022),
+    applyPantoTilt(0.0,    cy + lh * 0.470, 0.0024),
+    applyPantoTilt(0.011,  cy + lh * 0.475, 0.0022),
+    applyPantoTilt(0.026,  cy + lh * 0.485, 0.0016),
   ];
-  meshes.push(buildTubeAlongPath("M01_TopBrowBar_Gold", 0, topBarPts, 0.00085, 0.00085, 12));
+  meshes.push(buildTubeAlongPath("M01_TopBrowBar_Gold", 0, topBarPts, 0.00080, 0.00080, 12));
 
+  // Braços diagonais da barra superior até os cantos internos dos aros (detalhe característico da foto!)
+  for (const side of [-1, 1]) {
+    const sfx = side < 0 ? "L" : "R";
+    const strutPts = [
+      applyPantoTilt(side * 0.0125, cy + lh * 0.470, 0.0020),
+      applyPantoTilt(side * 0.0095, cy + lh * 0.340, 0.0020),
+    ];
+    meshes.push(buildTubeAlongPath(`M01_BridgeStrut_Gold_${sfx}`, 0, strutPts, 0.00072, 0.00072, 10));
+  }
+
+  // Ponte inferior horizontal em ouro 18K com parafusos dourados nos aros
   const lowerBridgePts = [
-    applyPantoTilt(-0.0115, cy + 0.0082, 0.0016),
-    applyPantoTilt(-0.005,  cy + 0.0086, 0.0022),
-    applyPantoTilt(0.0,     cy + 0.0088, 0.0024),
-    applyPantoTilt(0.005,   cy + 0.0086, 0.0022),
-    applyPantoTilt(0.0115,  cy + 0.0082, 0.0016),
+    applyPantoTilt(-0.0112, cy + lh * 0.17, 0.0016),
+    applyPantoTilt(-0.005,  cy + lh * 0.18, 0.0022),
+    applyPantoTilt(0.0,     cy + lh * 0.185, 0.0024),
+    applyPantoTilt(0.005,   cy + lh * 0.18, 0.0022),
+    applyPantoTilt(0.0112,  cy + lh * 0.17, 0.0016),
   ];
-  meshes.push(buildTubeAlongPath("M01_LowerBridge_Gold", 0, lowerBridgePts, 0.00085, 0.00085, 12));
+  meshes.push(buildTubeAlongPath("M01_LowerBridge_Gold", 0, lowerBridgePts, 0.00080, 0.00080, 12));
 
   // Parafusos dourados da ponte + Rebites Dourados Duplos nos cantos superiores
   for (const side of [-1, 1]) {
     const sfx = side < 0 ? "L" : "R";
-    meshes.push(buildSculptedSphere(`M01_BridgeScrew_${sfx}`, 0, applyPantoTilt(side * 0.0108, cy + 0.0082, 0.0020), [0.0009, 0.0009, 0.0007], 10, 8));
+    meshes.push(buildSculptedSphere(`M01_BridgeScrew_${sfx}`, 0, applyPantoTilt(side * 0.0108, cy + lh * 0.17, 0.0020), [0.00085, 0.00085, 0.0007], 10, 8));
     meshes.push(buildSculptedSphere(`M01_RivetTop_${sfx}`, 0, applyPantoTilt(side * (cx + lw * 0.46), cy + lh * 0.34, 0.0002), [0.00075, 0.00075, 0.0006], 10, 8));
     meshes.push(buildSculptedSphere(`M01_RivetLow_${sfx}`, 0, applyPantoTilt(side * (cx + lw * 0.50), cy + lh * 0.23, -0.0002), [0.00075, 0.00075, 0.0006], 10, 8));
   }
@@ -520,23 +531,25 @@ function generateModel01_ImperialLeao() {
   // Plaquetas Nasais
   addNosePadsAndArms(meshes, 0, 8, 0.0092, cy);
 
-  // Escultura refinada da Cabeça de Leão Dourada nas Charneiras
-  const hingeX = cx + lw * 0.5 + 0.0032;
+  // Escultura detalhada da Cabeça de Leão Dourada (juba + focinho + orelhas) nas charneiras
+  const hingeX = cx + lw * 0.5 + 0.0034;
   for (const side of [-1, 1]) {
     const sfx = side < 0 ? "L" : "R";
-    const lionPos = applyPantoTilt(side * hingeX, cy + 0.0045, -0.0042);
+    const lionPos = applyPantoTilt(side * hingeX, cy + 0.0045, -0.0038);
     meshes.push(
       buildSculptedSphere(
         `M01_LionHead_${sfx}`,
         0,
         lionPos,
-        [0.0024, 0.0034, 0.0040],
-        28,
-        20,
-        (lx, ly, lz) => {
+        [0.0026, 0.0036, 0.0038],
+        32,
+        24,
+        (lx, ly, lz, theta, phi) => {
           const maneAngle = Math.atan2(ly, lz);
-          const wave = 1 + 0.14 * Math.cos(12 * maneAngle) + 0.07 * Math.sin(6 * maneAngle);
-          return [lx * wave, ly * wave, lz * wave];
+          const mane = 1 + 0.16 * Math.cos(14 * maneAngle) * Math.sin(phi);
+          // Focinho projetado para frente (+Z / +X lateral)
+          const snout = lz > 0 && Math.abs(ly) < 0.0018 ? 1.18 : 1.0;
+          return [lx * mane * snout, ly * mane, lz * snout];
         }
       )
     );
@@ -555,22 +568,22 @@ function generateModel02_NavigatorAmbar() {
 
   for (const side of [-1, 1]) {
     const sfx = side < 0 ? "L" : "R";
-    meshes.push(buildLensMesh(`M02_Lens_${sfx}`, 5, side, cx, cy, lw, lh, 0.0018, 3.6, 0.92, 0.07, 0.0, 0.34));
-    meshes.push(buildAcetateRimMesh(`M02_Rim_${sfx}`, 3, side, cx, cy, lw, lh, 0.0030, 0.0042, 3.6, 0.92, 0.07, 0.0, 0.34));
+    meshes.push(buildLensMesh(`M02_Lens_${sfx}`, 5, side, cx, cy, lw, lh, 0.0018, 3.8, 0.95, 0.07, 0.0, 0.36));
+    meshes.push(buildAcetateRimMesh(`M02_Rim_${sfx}`, 3, side, cx, cy, lw, lh, 0.0030, 0.0042, 3.8, 0.95, 0.07, 0.0, 0.36));
   }
 
-  // Barra Superior Contínua + Ponte Inferior em Acetato Preto (recorte keyhole trapezoidal fiel à foto)
+  // Barra Superior Contínua alinhada ao topo dos aros + Ponte Inferior formando janela trapezoidal exata
   const bridgeTopPts = [
-    applyPantoTilt(-0.024, cy + lh * 0.425, 0.0005),
-    applyPantoTilt(0.0,    cy + lh * 0.435, 0.0014),
-    applyPantoTilt(0.024,  cy + lh * 0.425, 0.0005),
+    applyPantoTilt(-0.025, cy + lh * 0.485, 0.0004),
+    applyPantoTilt(0.0,    cy + lh * 0.495, 0.0014),
+    applyPantoTilt(0.025,  cy + lh * 0.485, 0.0004),
   ];
-  meshes.push(buildTubeAlongPath("M02_Bridge_TopBar", 3, bridgeTopPts, 0.0020, 0.0021, 12, true));
+  meshes.push(buildTubeAlongPath("M02_Bridge_TopBar", 3, bridgeTopPts, 0.0021, 0.0022, 12, true));
 
   const bridgeMainPts = [
-    applyPantoTilt(-0.0135, cy + 0.0068, 0.0006),
-    applyPantoTilt(0.0,     cy + 0.0072, 0.0014),
-    applyPantoTilt(0.0135,  cy + 0.0068, 0.0006),
+    applyPantoTilt(-0.0138, cy + lh * 0.14, 0.0006),
+    applyPantoTilt(0.0,     cy + lh * 0.145, 0.0014),
+    applyPantoTilt(0.0138,  cy + lh * 0.14, 0.0006),
   ];
   meshes.push(buildTubeAlongPath("M02_Bridge_Main", 3, bridgeMainPts, 0.0018, 0.0020, 12, true));
 
@@ -579,15 +592,15 @@ function generateModel02_NavigatorAmbar() {
   for (const side of [-1, 1]) {
     const sfx = side < 0 ? "L" : "R";
     const tPts = [
-      applyPantoTilt(side * (hingeX - 0.0025), cy + 0.006, 0.0006),
-      applyPantoTilt(side * (hingeX + 0.0012), cy + 0.006, -0.0010),
-      applyPantoTilt(side * (hingeX + 0.0012), cy + 0.006, -0.0075),
+      applyPantoTilt(side * (hingeX - 0.0028), cy + lh * 0.15, 0.0008),
+      applyPantoTilt(side * (hingeX + 0.0014), cy + lh * 0.15, -0.0008),
+      applyPantoTilt(side * (hingeX + 0.0014), cy + lh * 0.15, -0.0075),
     ];
-    meshes.push(buildTubeAlongPath(`M02_GoldTAccent_${sfx}`, 0, tPts, 0.00085, 0.00125, 10, true));
+    meshes.push(buildTubeAlongPath(`M02_GoldTAccent_${sfx}`, 0, tPts, 0.0009, 0.0013, 10, true));
   }
 
   // Hastes Finas em Acetato Preto
-  const [hx, hy, hz] = applyPantoTilt(hingeX, cy + 0.006, -0.0045);
+  const [hx, hy, hz] = applyPantoTilt(hingeX, cy + lh * 0.15, -0.0045);
   addTemples(meshes, "full_acetate_slim", 0, 3, Math.abs(hx), hy, hz, 0.138);
 
   return meshes;
@@ -600,53 +613,58 @@ function generateModel03_RimlessPantera() {
   // Lentes Rimless (Sem Aro) com corte geométrico levemente elevado no canto externo (igual foto)
   for (const side of [-1, 1]) {
     const sfx = side < 0 ? "L" : "R";
-    meshes.push(buildLensMesh(`M03_Lens_${sfx}`, 6, side, cx, cy, lw, lh, 0.0020, 3.8, 0.90, 0.02, 0.0032, 0.14));
+    meshes.push(buildLensMesh(`M03_Lens_${sfx}`, 6, side, cx, cy, lw, lh, 0.0020, 3.8, 0.92, 0.02, 0.0035, 0.10));
   }
 
-  // Ponte Central Rimless Delicada em Ouro 18K com pinças internas
+  // Ponte Central Rimless Delicada em Ouro 18K com pinças horizontais nas bordas internas
   const bridgePts = [
-    applyPantoTilt(-0.0125, cy + 0.0065, 0.0016),
-    applyPantoTilt(-0.0055, cy + 0.0085, 0.0026),
-    applyPantoTilt(0.0,     cy + 0.0092, 0.0029),
-    applyPantoTilt(0.0055,  cy + 0.0085, 0.0026),
-    applyPantoTilt(0.0125,  cy + 0.0065, 0.0016),
+    applyPantoTilt(-0.0128, cy + lh * 0.19, 0.0016),
+    applyPantoTilt(-0.0055, cy + lh * 0.23, 0.0026),
+    applyPantoTilt(0.0,     cy + lh * 0.245, 0.0029),
+    applyPantoTilt(0.0055,  cy + lh * 0.23, 0.0026),
+    applyPantoTilt(0.0128,  cy + lh * 0.19, 0.0016),
   ];
   meshes.push(buildTubeAlongPath("M03_RimlessBridge_Gold", 0, bridgePts, 0.00085, 0.00085, 12));
 
   for (const side of [-1, 1]) {
     const sfx = side < 0 ? "L" : "R";
-    meshes.push(buildSculptedSphere(`M03_BridgeClasp_Gold_${sfx}`, 0, applyPantoTilt(side * 0.012, cy + 0.0065, 0.0020), [0.0018, 0.0009, 0.0009], 10, 8));
+    meshes.push(buildSculptedSphere(`M03_BridgeClasp_Gold_${sfx}`, 0, applyPantoTilt(side * 0.0125, cy + lh * 0.19, 0.0020), [0.0022, 0.0009, 0.0009], 10, 8));
   }
 
   // Plaquetas Nasais
   addNosePadsAndArms(meshes, 0, 8, 0.0086, cy);
 
-  // Escultura esguia da Pantera Dourada com Manchas Pretas Esmaltadas na lateral externa da lente
+  // Escultura esguia da Pantera Dourada com orelhas e manchas pretas esmaltadas mordendo a lente
   const hingeX = cx + lw * 0.5;
   for (const side of [-1, 1]) {
     const sfx = side < 0 ? "L" : "R";
+    const py = cy + lh * 0.16;
     const pantherPts = [
-      applyPantoTilt(side * (hingeX - 0.0065), cy + 0.0055, 0.0008, 0.50),
-      applyPantoTilt(side * (hingeX - 0.0015), cy + 0.0055, 0.0010, 0.95),
-      applyPantoTilt(side * (hingeX + 0.0025), cy + 0.0055, -0.0018, 0.88),
-      applyPantoTilt(side * (hingeX + 0.0025), cy + 0.0055, -0.0095, 0.62),
+      applyPantoTilt(side * (hingeX - 0.0068), py, 0.0008, 0.45),
+      applyPantoTilt(side * (hingeX - 0.0020), py, 0.0010, 1.00),
+      applyPantoTilt(side * (hingeX + 0.0024), py, -0.0018, 0.90),
+      applyPantoTilt(side * (hingeX + 0.0024), py, -0.0098, 0.60),
     ];
     meshes.push(buildTubeAlongPath(`M03_PantherBody_${sfx}`, 0, pantherPts, 0.0015, 0.0019, 14));
 
+    // Orelhas discretas da pantera
+    meshes.push(buildSculptedSphere(`M03_PantherEar1_${sfx}`, 0, applyPantoTilt(side * (hingeX - 0.0010), py + 0.0018, 0.0004), [0.0006, 0.0008, 0.0006], 8, 6));
+    meshes.push(buildSculptedSphere(`M03_PantherEar2_${sfx}`, 0, applyPantoTilt(side * (hingeX - 0.0010), py - 0.0015, 0.0004), [0.0005, 0.0006, 0.0005], 8, 6));
+
     const spots = [
-      [-0.0035, 0.0062, 0.0018],
-      [-0.0035, 0.0048, 0.0018],
-      [-0.0005, 0.0064, 0.0015],
-      [-0.0005, 0.0046, 0.0015],
-      [0.0024,  0.0060, -0.0035],
-      [0.0024,  0.0048, -0.0062],
+      [-0.0038, py + 0.0007, 0.0018],
+      [-0.0038, py - 0.0007, 0.0018],
+      [-0.0008, py + 0.0009, 0.0015],
+      [-0.0008, py - 0.0009, 0.0015],
+      [0.0023,  py + 0.0005, -0.0035],
+      [0.0023,  py - 0.0006, -0.0062],
     ];
     spots.forEach((sp, idx) => {
       meshes.push(
         buildSculptedSphere(
           `M03_PantherSpot_${sfx}_${idx}`,
           3,
-          applyPantoTilt(side * (hingeX + sp[0]), cy + sp[1], sp[2]),
+          applyPantoTilt(side * (hingeX + sp[0]), sp[1], sp[2]),
           [0.00060, 0.00060, 0.00060],
           8,
           6
@@ -656,7 +674,7 @@ function generateModel03_RimlessPantera() {
   }
 
   // Hastes Finas Douradas com Ponteiras Tartaruga
-  const [hx, hy, hz] = applyPantoTilt(hingeX + 0.0024, cy + 0.0055, -0.0085);
+  const [hx, hy, hz] = applyPantoTilt(hingeX + 0.0024, cy + lh * 0.16, -0.0085);
   addTemples(meshes, "metal_plus_tip", 0, 1, Math.abs(hx), hy, hz, 0.135);
 
   return meshes;
@@ -666,23 +684,23 @@ function generateModel04_BoldTartaruga() {
   const meshes = [];
   const cx = 0.0345, cy = 0.0, lw = 0.050, lh = 0.032;
 
-  // Lentes Café Escuro + Aro Retangular Bold Tartaruga Clássico (4.2mm frontal bem marcado igual à foto)
+  // Lentes Café Escuro + Aro Retangular Bold Tartaruga Clássico (4.4mm frontal bem marcado igual à foto)
   for (const side of [-1, 1]) {
     const sfx = side < 0 ? "L" : "R";
-    meshes.push(buildLensMesh(`M04_Lens_${sfx}`, 7, side, cx, cy, lw, lh, 0.0018, 4.6, 0.95, 0.0, 0.0, 0.08));
-    meshes.push(buildAcetateRimMesh(`M04_Rim_${sfx}`, 2, side, cx, cy, lw, lh, 0.0042, 0.0048, 4.6, 0.95, 0.0, 0.0, 0.08));
+    meshes.push(buildLensMesh(`M04_Lens_${sfx}`, 7, side, cx, cy, lw, lh, 0.0018, 4.6, 0.95, 0.0, 0.0, 0.10));
+    meshes.push(buildAcetateRimMesh(`M04_Rim_${sfx}`, 2, side, cx, cy, lw, lh, 0.0044, 0.0048, 4.6, 0.95, 0.0, 0.0, 0.10));
   }
 
   // Ponte Central Bold Esculpida contínua com os aros (sem emblema dourado na frente, fiel à foto)
   const bridgePts = [
-    applyPantoTilt(-0.014, cy + 0.0062, 0.0002),
-    applyPantoTilt(0.0,    cy + 0.0070, 0.0008),
-    applyPantoTilt(0.014,  cy + 0.0062, 0.0002),
+    applyPantoTilt(-0.014, cy + lh * 0.22, 0.0002),
+    applyPantoTilt(0.0,    cy + lh * 0.24, 0.0008),
+    applyPantoTilt(0.014,  cy + lh * 0.22, 0.0002),
   ];
-  meshes.push(buildTubeAlongPath("M04_BoldBridge", 2, bridgePts, 0.0022, 0.0028, 12, true));
+  meshes.push(buildTubeAlongPath("M04_BoldBridge", 2, bridgePts, 0.0023, 0.0029, 12, true));
 
   // Hastes Bold em Acetato Tartaruga
-  const hingeX = cx + lw * 0.5 + 0.0042;
+  const hingeX = cx + lw * 0.5 + 0.0044;
   const [hx, hy, hz] = applyPantoTilt(hingeX, cy + 0.0025, -0.0035);
   addTemples(meshes, "full_acetate_bold", 0, 2, Math.abs(hx), hy, hz, 0.136);
 

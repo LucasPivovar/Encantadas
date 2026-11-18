@@ -51,83 +51,32 @@ function createOpticalLensTintTexture(frameStyle: string): THREE.CanvasTexture {
 
   // No Canvas 2D, y=0 é o topo (v=1 no Three.js com flipY=true padrão)
   const grad = ctx.createLinearGradient(0, 0, 0, 256);
-  if (frameStyle === "navigator-amber") {
-    grad.addColorStop(0, "rgba(218, 90, 22, 0.56)");
-    grad.addColorStop(0.55, "rgba(235, 122, 42, 0.42)");
-    grad.addColorStop(1, "rgba(248, 165, 88, 0.24)");
-  } else if (frameStyle === "rimless-panther") {
-    grad.addColorStop(0, "rgba(76, 40, 22, 0.60)");
-    grad.addColorStop(0.5, "rgba(138, 90, 60, 0.34)");
-    grad.addColorStop(1, "rgba(220, 192, 168, 0.10)");
-  } else if (frameStyle === "bold-tortoise") {
-    grad.addColorStop(0, "rgba(38, 22, 12, 0.66)");
-    grad.addColorStop(0.65, "rgba(58, 34, 20, 0.52)");
-    grad.addColorStop(1, "rgba(82, 50, 30, 0.36)");
+  if (frameStyle.includes("navigator")) {
+    // Solaris: âmbar pêssego uniforme e luminoso igual à foto
+    grad.addColorStop(0, "rgba(228, 138, 78, 0.92)");
+    grad.addColorStop(0.55, "rgba(235, 150, 90, 0.88)");
+    grad.addColorStop(1, "rgba(240, 162, 104, 0.84)");
+  } else if (frameStyle.includes("rimless")) {
+    // Pantera: degradê chá-cacau forte no topo até champagne quase transparente na base
+    grad.addColorStop(0, "rgba(92, 54, 34, 0.96)");
+    grad.addColorStop(0.45, "rgba(138, 94, 66, 0.68)");
+    grad.addColorStop(1, "rgba(222, 198, 178, 0.22)");
+  } else if (frameStyle.includes("bold")) {
+    // Aurea: café sólido uniforme igual à foto
+    grad.addColorStop(0, "rgba(70, 40, 24, 0.94)");
+    grad.addColorStop(0.6, "rgba(78, 46, 28, 0.90)");
+    grad.addColorStop(1, "rgba(84, 50, 32, 0.88)");
   } else {
-    // Imperial Leão
-    grad.addColorStop(0, "rgba(54, 28, 14, 0.64)");
-    grad.addColorStop(0.55, "rgba(110, 64, 36, 0.38)");
-    grad.addColorStop(1, "rgba(182, 132, 95, 0.14)");
+    // Imperial Leão: degradê marrom espresso no topo até âmbar claro na base
+    grad.addColorStop(0, "rgba(52, 28, 14, 0.96)");
+    grad.addColorStop(0.52, "rgba(104, 62, 36, 0.72)");
+    grad.addColorStop(1, "rgba(178, 134, 102, 0.36)");
   }
 
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, 256, 256);
 
-  // Leve vinheta interna de espessura de cristal na borda da lente
-  const edgeGrad = ctx.createRadialGradient(128, 128, 88, 128, 128, 134);
-  edgeGrad.addColorStop(0, "rgba(255,255,255,0)");
-  edgeGrad.addColorStop(1, "rgba(255,248,235,0.22)");
-  ctx.fillStyle = edgeGrad;
-  ctx.fillRect(0, 0, 256, 256);
-
   const tex = new THREE.CanvasTexture(c);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  return tex;
-}
-
-/**
- * Textura de Reflexo Specular Dinâmico de Vidro (Softbox + Brilho Anti-Reflexo):
- * Desliza sobre a superfície curva da lente conforme a pessoa gira a cabeça!
- */
-function createDynamicGlassReflectionTexture(): THREE.CanvasTexture {
-  const c = document.createElement("canvas");
-  c.width = 512;
-  c.height = 512;
-  const ctx = c.getContext("2d")!;
-
-  ctx.clearRect(0, 0, 512, 512);
-
-  ctx.save();
-  ctx.translate(256, 256);
-  ctx.rotate(-0.42);
-
-  // Faixa principal de reflexo de janela/estúdio no vidro
-  const mainBand = ctx.createLinearGradient(-220, 0, 220, 0);
-  mainBand.addColorStop(0, "rgba(255,255,255,0)");
-  mainBand.addColorStop(0.34, "rgba(255,255,255,0)");
-  mainBand.addColorStop(0.44, "rgba(255,253,248,0.34)");
-  mainBand.addColorStop(0.5, "rgba(255,255,255,0.52)");
-  mainBand.addColorStop(0.54, "rgba(220,240,255,0.24)");
-  mainBand.addColorStop(0.62, "rgba(255,255,255,0)");
-  mainBand.addColorStop(1, "rgba(255,255,255,0)");
-  ctx.fillStyle = mainBand;
-  ctx.fillRect(-320, -320, 640, 640);
-
-  // Segunda faixa fina de reflexo óptico secundário
-  const secondBand = ctx.createLinearGradient(-220, 0, 220, 0);
-  secondBand.addColorStop(0, "rgba(255,255,255,0)");
-  secondBand.addColorStop(0.66, "rgba(255,255,255,0)");
-  secondBand.addColorStop(0.71, "rgba(255,252,245,0.22)");
-  secondBand.addColorStop(0.75, "rgba(255,255,255,0)");
-  secondBand.addColorStop(1, "rgba(255,255,255,0)");
-  ctx.fillStyle = secondBand;
-  ctx.fillRect(-320, -320, 640, 640);
-
-  ctx.restore();
-
-  const tex = new THREE.CanvasTexture(c);
-  tex.wrapS = THREE.ClampToEdgeWrapping;
-  tex.wrapT = THREE.ClampToEdgeWrapping;
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
 }
@@ -141,17 +90,17 @@ function createTortoiseTexture(dark: boolean): THREE.CanvasTexture {
   c.height = 256;
   const ctx = c.getContext("2d")!;
 
-  ctx.fillStyle = dark ? "#190C05" : "#261207";
+  ctx.fillStyle = dark ? "#120803" : "#150903";
   ctx.fillRect(0, 0, 256, 256);
 
   const colors = dark
-    ? ["rgba(98, 44, 15, 0.58)", "rgba(148, 70, 22, 0.36)", "rgba(18, 9, 4, 0.72)"]
-    : ["rgba(172, 84, 24, 0.68)", "rgba(218, 122, 40, 0.52)", "rgba(30, 14, 6, 0.68)"];
+    ? ["rgba(82, 36, 12, 0.64)", "rgba(126, 58, 18, 0.42)", "rgba(14, 7, 3, 0.78)"]
+    : ["rgba(196, 98, 24, 0.82)", "rgba(232, 138, 44, 0.68)", "rgba(18, 8, 3, 0.82)"];
 
-  for (let i = 0; i < 95; i++) {
+  for (let i = 0; i < 110; i++) {
     const x = (Math.sin(i * 12.9898) * 0.5 + 0.5) * 256;
     const y = (Math.cos(i * 78.233) * 0.5 + 0.5) * 256;
-    const r = 14 + (i % 28);
+    const r = 12 + (i % 26);
     const g = ctx.createRadialGradient(x, y, 2, x, y, r);
     g.addColorStop(0, colors[i % colors.length]);
     g.addColorStop(1, "rgba(0,0,0,0)");
