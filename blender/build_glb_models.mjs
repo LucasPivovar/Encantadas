@@ -430,11 +430,11 @@ function addTemples(meshes, style, goldMatIdx, tipMatIdx, hingeX, hingeY, hingeZ
       meshes.push(buildTubeAlongPath(`TempleMetal_${suffix}`, goldMatIdx, metalPts, 0.0010, 0.0015, 12, true));
 
       const tipPts = [
-        [x0 + side * 0.0010, hingeY - 0.0005, zMid + 0.002, 0.90],
-        [x0 - side * 0.0008, hingeY - 0.0012, hingeZ - length * 0.74, 1.05],
-        [x0 - side * 0.0045, hingeY - 0.0080, hingeZ - length * 0.88, 1.12],
-        [x0 - side * 0.0095, hingeY - 0.0195, hingeZ - length * 0.97, 1.0],
-        [x0 - side * 0.0120, hingeY - 0.0235, hingeZ - length * 1.02, 0.70],
+        [x0 + side * 0.0010, hingeY - 0.0002, zMid + 0.002, 0.90],
+        [x0 - side * 0.0005, hingeY - 0.0006, hingeZ - length * 0.78, 1.02],
+        [x0 - side * 0.0045, hingeY - 0.0075, hingeZ - length * 0.90, 1.08],
+        [x0 - side * 0.0095, hingeY - 0.0190, hingeZ - length * 0.98, 0.96],
+        [x0 - side * 0.0120, hingeY - 0.0235, hingeZ - length * 1.02, 0.68],
       ];
       meshes.push(buildTubeAlongPath(`TempleTip_${suffix}`, tipMatIdx, tipPts, 0.0014, 0.0023, 12, true));
     } else {
@@ -444,9 +444,9 @@ function addTemples(meshes, style, goldMatIdx, tipMatIdx, hingeX, hingeY, hingeZ
 
       const fullPts = [
         [x0, hingeY, hingeZ, 1.05],
-        [x0 + side * 0.0018, hingeY - 0.0002, hingeZ - length * 0.38, 0.98],
-        [x0 - side * 0.0008, hingeY - 0.0012, hingeZ - length * 0.74, 0.86],
-        [x0 - side * 0.0058, hingeY - 0.0100, hingeZ - length * 0.89, 0.92],
+        [x0 + side * 0.0018, hingeY - 0.0001, hingeZ - length * 0.40, 0.98],
+        [x0 - side * 0.0005, hingeY - 0.0006, hingeZ - length * 0.78, 0.86],
+        [x0 - side * 0.0055, hingeY - 0.0095, hingeZ - length * 0.91, 0.90],
         [x0 - side * 0.0115, hingeY - 0.0220, hingeZ - length * 1.00, 0.68],
       ];
       meshes.push(buildTubeAlongPath(`TempleAcetate_${suffix}`, tipMatIdx, fullPts, rx, ry, 12, true));

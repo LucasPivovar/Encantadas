@@ -189,22 +189,19 @@ export function ArFaceTryOnCanvas({
             mName.includes("NosePadCore")
           ) {
             mesh.renderOrder = 2;
-            mesh.material = new THREE.MeshPhysicalMaterial({
+            mesh.material = new THREE.MeshStandardMaterial({
               color: new THREE.Color(0.86, 0.70, 0.36),
-              metalness: 0.95,
+              metalness: 0.94,
               roughness: 0.22,
-              clearcoat: 0.35,
-              clearcoatRoughness: 0.10,
               envMapIntensity: 1.35,
             });
           } else if (mName.includes("NosePad_")) {
             mesh.renderOrder = 2;
-            mesh.material = new THREE.MeshPhysicalMaterial({
+            mesh.material = new THREE.MeshStandardMaterial({
               color: new THREE.Color(0xfaf6f0),
               transparent: true,
               opacity: 0.48,
               roughness: 0.16,
-              clearcoat: 0.8,
               depthWrite: false,
             });
           } else if (
@@ -212,24 +209,20 @@ export function ArFaceTryOnCanvas({
             style.includes("navigator")
           ) {
             mesh.renderOrder = 2;
-            mesh.material = new THREE.MeshPhysicalMaterial({
+            mesh.material = new THREE.MeshStandardMaterial({
               color: new THREE.Color(0x0f0e0d),
-              metalness: 0.02,
+              metalness: 0.04,
               roughness: 0.12,
-              clearcoat: 0.92,
-              clearcoatRoughness: 0.05,
-              envMapIntensity: 1.1,
+              envMapIntensity: 1.15,
             });
           } else {
             mesh.renderOrder = 2;
-            mesh.material = new THREE.MeshPhysicalMaterial({
+            mesh.material = new THREE.MeshStandardMaterial({
               map: style.includes("bold") ? tortClassicTex : tortDarkTex,
               color: new THREE.Color(0xffffff),
-              metalness: 0.0,
+              metalness: 0.02,
               roughness: 0.14,
-              clearcoat: 0.90,
-              clearcoatRoughness: 0.06,
-              envMapIntensity: 1.05,
+              envMapIntensity: 1.10,
             });
           }
         }
@@ -266,33 +259,24 @@ export function ArFaceTryOnCanvas({
       alpha: true,
       powerPreference: "high-performance",
     });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    const isMobileViewport = window.innerWidth < 768;
+    renderer.setPixelRatio(
+      isMobileViewport ? 1 : Math.min(window.devicePixelRatio || 1, 1.5)
+    );
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.0;
     container.innerHTML = "";
     container.appendChild(renderer.domElement);
 
-    // Sonda de Luz Ambiente e Reflexo ao Vivo da Câmera (integra o 3D à iluminação real do local)
+    // Ambiente estático gerado UMA única vez (zero gargalo na GPU mobile)
     const pmrem = new THREE.PMREMGenerator(renderer);
     const fallbackEnv = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-
-    const envCanvas = document.createElement("canvas");
-    envCanvas.width = 128;
-    envCanvas.height = 64;
-    const envCtx = envCanvas.getContext("2d");
-    if (envCtx) {
-      envCtx.fillStyle = "#8a857e";
-      envCtx.fillRect(0, 0, 128, 64);
-    }
-    const liveEnvTex = new THREE.CanvasTexture(envCanvas);
-    liveEnvTex.mapping = THREE.EquirectangularReflectionMapping;
-    liveEnvTex.colorSpace = THREE.SRGBColorSpace;
     scene.environment = fallbackEnv;
 
     const probeCanvas = document.createElement("canvas");
-    probeCanvas.width = 24;
-    probeCanvas.height = 16;
+    probeCanvas.width = 16;
+    probeCanvas.height = 12;
     const probeCtx = probeCanvas.getContext("2d", { willReadFrequently: true });
 
     const hemiLight = new THREE.HemisphereLight(0xf6f2ec, 0x7a6a5c, 1.0);
@@ -315,9 +299,7 @@ export function ArFaceTryOnCanvas({
       botB: 0.4,
       luma: 0.55,
       dirX: 0.25,
-      hasLiveEnv: false,
       lastProbeMs: 0,
-      lastEnvMs: 0,
     };
 
     // Grupo Âncora 3D — começa invisível até mapear o rosto
@@ -348,6 +330,18 @@ export function ArFaceTryOnCanvas({
     faceShield.position.set(0, -0.022, -0.018); // frente em z = +0.006 (atrás das lentes/aros, bloqueia hastes cruzando o rosto)
     faceShield.renderOrder = 0;
     faceAnchor.add(faceShield);
+
+    // Oclusores de orelha/mastoide (esquerda e direita): a haste passa por cima e se esconde atrás da orelha!
+    for (const side of [-1, 1]) {
+      const earOccluder = new THREE.Mesh(
+        new THREE.SphereGeometry(0.028, 16, 12),
+        occluderMat
+      );
+      earOccluder.scale.set(0.65, 1.15, 1.30);
+      earOccluder.position.set(side * 0.069, -0.020, -0.106);
+      earOccluder.renderOrder = 0;
+      faceAnchor.add(earOccluder);
+    }
 
     // 2. Sombra de Contato Anatômica sob a Ponte e Lentes
     const shadowCanvas = document.createElement("canvas");
@@ -467,45 +461,43 @@ export function ArFaceTryOnCanvas({
       const ch = Math.max(1, container.clientHeight);
       const nowMs = performance.now();
 
-      // Atualiza iluminação ambiente real a partir do vídeo da câmera (~10x/s)
-      if (video && video.readyState >= 2 && probeCtx && nowMs - ambientState.lastProbeMs > 95) {
+      // Atualiza iluminação ambiente real a partir do vídeo da câmera (~4x/s, zero impacto na GPU)
+      if (video && video.readyState >= 2 && probeCtx && nowMs - ambientState.lastProbeMs > 240) {
         ambientState.lastProbeMs = nowMs;
         try {
-          probeCtx.save();
-          probeCtx.scale(-1, 1);
-          probeCtx.drawImage(video, -24, 0, 24, 16);
-          probeCtx.restore();
-          const data = probeCtx.getImageData(0, 0, 24, 16).data;
+          probeCtx.drawImage(video, 0, 0, 16, 12);
+          const data = probeCtx.getImageData(0, 0, 16, 12).data;
 
           let topR = 0, topG = 0, topB = 0, topCnt = 0;
           let botR = 0, botG = 0, botB = 0, botCnt = 0;
           let leftLuma = 0, rightLuma = 0;
 
-          for (let y = 0; y < 16; y++) {
-            for (let x = 0; x < 24; x++) {
-              const idx = (y * 24 + x) * 4;
+          for (let y = 0; y < 12; y++) {
+            for (let x = 0; x < 16; x++) {
+              const idx = (y * 16 + x) * 4;
               const r = data[idx] / 255;
               const g = data[idx + 1] / 255;
               const b = data[idx + 2] / 255;
               const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
 
-              if (y < 7) {
+              if (y < 5) {
                 topR += r; topG += g; topB += b; topCnt++;
               } else {
                 botR += r; botG += g; botB += b; botCnt++;
               }
-              if (x < 12) leftLuma += lum;
-              else rightLuma += lum;
+              // Vídeo exibido espelhado (-scale-x-100): x < 8 no vídeo bruto corresponde à direita na tela
+              if (x < 8) rightLuma += lum;
+              else leftLuma += lum;
             }
           }
 
           if (topCnt > 0 && botCnt > 0) {
             const tR = topR / topCnt, tG = topG / topCnt, tB = topB / topCnt;
             const bR = botR / botCnt, bG = botG / botCnt, bB = botB / botCnt;
-            const avgLuma = THREE.MathUtils.clamp((leftLuma + rightLuma) / (24 * 16), 0.12, 0.95);
+            const avgLuma = THREE.MathUtils.clamp((leftLuma + rightLuma) / (16 * 12), 0.12, 0.95);
             const dirBalance = THREE.MathUtils.clamp((rightLuma - leftLuma) / (leftLuma + rightLuma + 0.001) * 2.2, -0.8, 0.8);
 
-            const s = 0.22;
+            const s = 0.28;
             ambientState.topR += (tR - ambientState.topR) * s;
             ambientState.topG += (tG - ambientState.topG) * s;
             ambientState.topB += (tB - ambientState.topB) * s;
@@ -537,29 +529,6 @@ export function ArFaceTryOnCanvas({
 
             rimLight.intensity = 0.25 + ambientState.luma * 0.65;
             renderer.toneMappingExposure = 0.84 + ambientState.luma * 0.30;
-          }
-
-          // Atualiza mapa de reflexão PMREM ao vivo da câmera (~3x/s)
-          if (envCtx && nowMs - ambientState.lastEnvMs > 320) {
-            ambientState.lastEnvMs = nowMs;
-            envCtx.save();
-            envCtx.scale(-1, 1);
-            envCtx.drawImage(probeCanvas, -128, 0, 128, 64);
-            envCtx.restore();
-            const skyGrad = envCtx.createLinearGradient(0, 0, 0, 26);
-            skyGrad.addColorStop(0, "rgba(255, 252, 245, 0.28)");
-            skyGrad.addColorStop(1, "rgba(255, 252, 245, 0)");
-            envCtx.fillStyle = skyGrad;
-            envCtx.fillRect(0, 0, 128, 26);
-
-            liveEnvTex.needsUpdate = true;
-            const prevEnv = scene.environment;
-            const nextPmrem = pmrem.fromEquirectangular(liveEnvTex);
-            scene.environment = nextPmrem.texture;
-            if (prevEnv && prevEnv !== fallbackEnv) {
-              prevEnv.dispose();
-            }
-            ambientState.hasLiveEnv = true;
           }
         } catch {
           // Ignore transient canvas security/video frame errors
@@ -688,12 +657,12 @@ export function ArFaceTryOnCanvas({
       }
 
       if (faceAnchor.visible) {
-        // Suavização adaptativa por velocidade: resposta quase instantânea ao mexer o rosto, estável quando parado
+        // Resposta direta (zero delay elástico ao mexer o rosto, suave apenas contra micro-tremor parado)
         const posDelta = currentPose.pos.distanceTo(targetPose.pos);
         const rotDelta = currentPose.quat.angleTo(targetPose.quat);
-        const posAlpha = posDelta > 0.002 ? 0.90 : 0.60;
-        const rotAlpha = rotDelta > 0.015 ? 0.88 : 0.58;
-        const scaleAlpha = Math.abs(targetPose.scale - currentPose.scale) > 0.015 ? 0.85 : 0.55;
+        const posAlpha = posDelta > 0.0015 ? 0.96 : 0.72;
+        const rotAlpha = rotDelta > 0.012 ? 0.95 : 0.70;
+        const scaleAlpha = Math.abs(targetPose.scale - currentPose.scale) > 0.012 ? 0.92 : 0.68;
 
         currentPose.pos.lerp(targetPose.pos, posAlpha);
         currentPose.quat.slerp(targetPose.quat, rotAlpha);
@@ -727,7 +696,6 @@ export function ArFaceTryOnCanvas({
         faceLandmarker.close();
       }
       shadowTex.dispose();
-      liveEnvTex.dispose();
       fallbackEnv.dispose();
       pmrem.dispose();
       renderer.dispose();
