@@ -166,15 +166,15 @@ export function ArFaceTryOnCanvas({
               color: new THREE.Color(0xffffff),
               transparent: true,
               opacity: lensOpacity,
-              roughness: 0.03,
+              roughness: 0.02,
               metalness: 0.0,
               ior: 1.52,
-              reflectivity: 0.9,
+              reflectivity: 0.95,
               clearcoat: 1.0,
-              clearcoatRoughness: 0.03,
-              envMapIntensity: 1.15,
+              clearcoatRoughness: 0.02,
+              envMapIntensity: 1.25,
               depthWrite: false,
-              side: THREE.DoubleSide,
+              side: THREE.FrontSide,
             });
           } else if (
             mName.includes("Gold") ||
@@ -524,14 +524,13 @@ export function ArFaceTryOnCanvas({
             renderer.toneMappingExposure = 0.84 + ambientState.luma * 0.30;
           }
 
-          // Atualiza mapa de reflexão ao vivo da câmera (~4x/s)
-          if (envCtx && nowMs - ambientState.lastEnvMs > 240) {
+          // Atualiza mapa de reflexão PMREM ao vivo da câmera (~3x/s)
+          if (envCtx && nowMs - ambientState.lastEnvMs > 320) {
             ambientState.lastEnvMs = nowMs;
             envCtx.save();
             envCtx.scale(-1, 1);
             envCtx.drawImage(probeCanvas, -128, 0, 128, 64);
             envCtx.restore();
-            // Leve brilho difuso superior para simular janela/teto natural
             const skyGrad = envCtx.createLinearGradient(0, 0, 0, 26);
             skyGrad.addColorStop(0, "rgba(255, 252, 245, 0.28)");
             skyGrad.addColorStop(1, "rgba(255, 252, 245, 0)");
@@ -539,10 +538,13 @@ export function ArFaceTryOnCanvas({
             envCtx.fillRect(0, 0, 128, 26);
 
             liveEnvTex.needsUpdate = true;
-            if (!ambientState.hasLiveEnv) {
-              ambientState.hasLiveEnv = true;
-              scene.environment = liveEnvTex;
+            const prevEnv = scene.environment;
+            const nextPmrem = pmrem.fromEquirectangular(liveEnvTex);
+            scene.environment = nextPmrem.texture;
+            if (prevEnv && prevEnv !== fallbackEnv) {
+              prevEnv.dispose();
             }
+            ambientState.hasLiveEnv = true;
           }
         } catch {
           // Ignore transient canvas security/video frame errors
