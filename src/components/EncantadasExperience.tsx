@@ -146,19 +146,8 @@ export function EncantadasExperience({ catalog, manifest }: EncantadasExperience
     ScrollTrigger.config({ ignoreMobileResize: true });
 
     const ctx = gsap.context(() => {
-      // 0. Entrada elegante do texto do Hero
-      gsap.fromTo(
-        "[data-hero-copy] > *",
-        { autoAlpha: 0, y: 24 },
-        {
-          autoAlpha: 1,
-          y: 0,
-          duration: 1.0,
-          stagger: 0.1,
-          ease: "expo.out",
-          delay: 0.08,
-        }
-      );
+      // Prepara estado inicial do Hero para animar somente quando a tela de loading sair
+      gsap.set("[data-hero-copy] > *", { autoAlpha: 0, y: 26 });
 
       // 1. Hero recua com interpolação leve enquanto a primeira seção sobe
       gsap.to("[data-hero-photo]", {
@@ -204,6 +193,39 @@ export function EncantadasExperience({ catalog, manifest }: EncantadasExperience
 
     return () => ctx.revert();
   }, []);
+
+  // Animação de entrada da Hero dispara exatamente quando o loading termina (visível no mobile e desktop!)
+  useEffect(() => {
+    if (!isSiteReady) return;
+    const root = rootRef.current;
+    if (!root) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      gsap.set("[data-hero-copy] > *", { autoAlpha: 1, y: 0 });
+      return;
+    }
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        "[data-hero-photo]",
+        { scale: 1.07 },
+        { scale: 1.0, duration: 1.4, ease: "expo.out" }
+      );
+      gsap.fromTo(
+        "[data-hero-copy] > *",
+        { autoAlpha: 0, y: 28 },
+        {
+          autoAlpha: 1,
+          y: 0,
+          duration: 0.95,
+          stagger: 0.11,
+          ease: "expo.out",
+          delay: 0.12,
+        }
+      );
+    }, root);
+
+    return () => ctx.revert();
+  }, [isSiteReady]);
 
   // Duplica a lista para criar o loop infinito perfeito (-50% translate3d)
   const infiniteSlides = useMemo(
@@ -282,15 +304,15 @@ export function EncantadasExperience({ catalog, manifest }: EncantadasExperience
                   <a
                     href="#primeira-cena"
                     onClick={(e) => smoothJump(e, "primeira-cena")}
-                    className="btn btn-primary flex-1 sm:flex-initial"
+                    className="btn btn-primary flex-1 sm:flex-initial whitespace-nowrap"
                   >
-                    Conhecer a coleção
+                    Ver coleção
                   </a>
 
                   <a
                     href="#colecao"
                     onClick={(e) => smoothJump(e, "colecao")}
-                    className="btn bg-white/85 text-[#1d1d1f] backdrop-blur-md hover:bg-white flex-1 sm:flex-initial"
+                    className="btn bg-white/85 text-[#1d1d1f] backdrop-blur-md hover:bg-white flex-1 sm:flex-initial whitespace-nowrap"
                   >
                     Comprar agora
                   </a>
